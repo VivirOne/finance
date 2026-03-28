@@ -186,6 +186,39 @@ tr.future-row { opacity: 0.5; }
 .balance-credit { font-weight: 600; color: var(--green); }
 .balance-owing { font-weight: 600; color: var(--red); }
 
+/* Person Toggle */
+.person-toggle {
+  display: flex; gap: 8px; margin-bottom: 20px;
+}
+.person-toggle button {
+  flex: 1; padding: 10px 16px; font-size: 14px; font-weight: 500;
+  border: 1.5px solid #e0dbd6; border-radius: 8px; background: var(--white);
+  cursor: pointer; font-family: var(--font-body); color: var(--text-light);
+  transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.person-toggle button.selected {
+  border-color: var(--green); background: var(--green-light); color: var(--green); font-weight: 600;
+}
+.person-toggle button .avatar {
+  width: 24px; height: 24px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; font-size: 11px;
+  font-weight: 600; color: var(--white);
+}
+.avatar-j { background: #4a6fa5; }
+.avatar-i { background: #a56a8c; }
+
+/* Person Badge */
+.person-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 500; padding: 2px 8px 2px 3px;
+  border-radius: 12px; background: var(--card); border: 1px solid var(--border);
+}
+.person-badge .avatar-sm {
+  width: 18px; height: 18px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; font-size: 9px;
+  font-weight: 600; color: var(--white);
+}
+
 /* Form */
 .form-section { max-width: 560px; }
 .form-hint { font-size: 14px; color: var(--text-light); margin-bottom: 24px; line-height: 1.5; }
@@ -250,7 +283,7 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 }
 .expense-info { display: flex; flex-direction: column; gap: 2px; }
 .expense-name { font-size: 14px; font-weight: 500; }
-.expense-meta { font-size: 12px; color: var(--text-light); }
+.expense-meta { font-size: 12px; color: var(--text-light); display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
 .expense-right { display: flex; align-items: center; gap: 12px; }
 .expense-amount { font-family: var(--font-display); font-size: 16px; font-weight: 400; }
 .expense-amount.credit { color: var(--green); }
@@ -294,14 +327,16 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 /* Responsive */
 @media (max-width: 600px) {
   .stats-row { grid-template-columns: 1fr; }
-  .nav { flex-wrap: wrap; }
-  .nav button { font-size: 12px; padding: 6px 10px; }
+  .nav { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .nav button { font-size: 12px; padding: 6px 10px; white-space: nowrap; }
   .status-amount { font-size: 28px; }
   .header { flex-direction: column; }
   .form-row { flex-direction: column; gap: 0; }
   .prop-tax-grid { grid-template-columns: repeat(3, 1fr); }
   .chart-wrap { height: 160px; }
   .stat-value { font-size: 18px; }
+  .expense-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .expense-right { align-self: flex-end; }
 }
 </style>
 </head>
@@ -345,7 +380,7 @@ const DEFAULT_DATA = {
     propertyTax: [0, 0, 285.56, 285.50, 285.50, 142.76, 142.76, 142.76, 0, 0, 0, 0]
   },
   expenses: {
-    "phil-1": { description: "Philippines Trip", halfAmount: 3699.45, fullAmount: 7398.90, date: "2026-01-07" }
+    "phil-1": { description: "Philippines Trip", halfAmount: 3699.45, fullAmount: 7398.90, date: "2026-01-07", paidBy: "John" }
   }
 };
 
@@ -601,7 +636,17 @@ function renderAddExpense() {
   app.innerHTML = renderNav() + `
     <div class="form-section fade-in">
       <h2 class="section-title">Add a Shared Expense</h2>
-      <p class="form-hint">Enter the full amount you paid — we'll split it in half automatically. For returns, enter a negative amount.</p>
+      <p class="form-hint">Enter the full amount paid — we'll split it in half automatically. For returns, enter a negative amount.</p>
+
+      <label class="field-label">Who paid?</label>
+      <div class="person-toggle">
+        <button id="pick-john" class="selected" data-person="John">
+          <span class="avatar avatar-j">J</span> John
+        </button>
+        <button id="pick-ira" data-person="Ira">
+          <span class="avatar avatar-i">I</span> Ira
+        </button>
+      </div>
 
       <div class="form-group">
         <label class="field-label">What was it for?</label>
@@ -625,10 +670,26 @@ function renderAddExpense() {
     </div>`;
   bindNav();
 
+  let selectedPerson = "John";
   const descEl = $("#exp-desc");
   const amtEl = $("#exp-amount");
   const addBtn = $("#btn-add");
   const preview = $("#split-preview");
+  const pickJohn = $("#pick-john");
+  const pickIra = $("#pick-ira");
+
+  pickJohn.addEventListener("click", () => {
+    selectedPerson = "John";
+    pickJohn.classList.add("selected");
+    pickIra.classList.remove("selected");
+    updatePreview();
+  });
+  pickIra.addEventListener("click", () => {
+    selectedPerson = "Ira";
+    pickIra.classList.add("selected");
+    pickJohn.classList.remove("selected");
+    updatePreview();
+  });
 
   function updatePreview() {
     const amt = parseFloat(amtEl.value);
@@ -640,12 +701,12 @@ function renderAddExpense() {
       preview.innerHTML = `
         <div class="split-preview ${isReturn ? 'return' : ''}">
           <div class="split-row">
-            <span>${isReturn ? 'Return amount' : 'Full amount'}</span>
+            <span>${isReturn ? 'Return amount' : 'Full amount'} <span style="color:var(--text-faint)">(paid by ${selectedPerson})</span></span>
             <span style="font-weight:600">${fmt(Math.abs(amt))}</span>
           </div>
           <div class="split-divider"></div>
           <div class="split-row">
-            <span>${isReturn ? 'Reduces your credit by' : "Ira's half (your credit)"}</span>
+            <span>${isReturn ? 'Reduces credit by' : "Each person's half"}</span>
             <span style="font-weight:600;color:${isReturn ? 'var(--red)' : 'var(--green)'}">${fmt(Math.abs(amt) / 2)}</span>
           </div>
         </div>`;
@@ -669,10 +730,11 @@ function renderAddExpense() {
       description: desc,
       halfAmount: half,
       fullAmount: full,
+      paidBy: selectedPerson,
       date: new Date().toISOString().slice(0, 10)
     };
     saveData();
-    showToast(full > 0 ? `Added ${desc} — ${fmt(half)} credit` : `Deducted ${desc} — ${fmt(Math.abs(half))}`);
+    showToast(full > 0 ? `Added ${desc} — ${fmt(half)} credit (${selectedPerson})` : `Deducted ${desc} — ${fmt(Math.abs(half))}`);
     currentView = "dashboard";
     render();
   });
@@ -687,17 +749,24 @@ function renderExpenses() {
       <h2 class="section-title">All Expenses</h2>
       ${expenses.length === 0 ? '<p class="empty-text">No expenses yet. Add your first one!</p>' : `
         <div class="expense-list">
-          ${expenses.map(exp => `
+          ${expenses.map(exp => {
+            const person = exp.paidBy || 'John';
+            const isJ = person === 'John';
+            return `
             <div class="expense-item">
               <div class="expense-info">
                 <span class="expense-name">${exp.description}</span>
-                <span class="expense-meta">${exp.date || '—'} · Full: ${fmt(exp.fullAmount || exp.halfAmount * 2)}</span>
+                <span class="expense-meta">
+                  <span class="person-badge"><span class="avatar-sm ${isJ ? 'avatar-j' : 'avatar-i'}">${isJ ? 'J' : 'I'}</span>${person}</span>
+                  &nbsp;·&nbsp; ${exp.date || '—'} &nbsp;·&nbsp; Full: ${fmt(exp.fullAmount || exp.halfAmount * 2)}
+                </span>
               </div>
               <div class="expense-right">
                 <span class="expense-amount ${exp.halfAmount < 0 ? 'debit' : 'credit'}">${exp.halfAmount < 0 ? '-' : ''}${fmt(Math.abs(exp.halfAmount))}</span>
                 <button class="remove-btn" data-remove="${exp.id}" title="Remove">×</button>
               </div>
-            </div>`).join("")}
+            </div>`;
+          }).join("")}
           <div class="expense-total">
             <span>Total Credits</span>
             <span style="font-weight:600">${fmt(total)}</span>

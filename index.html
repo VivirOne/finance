@@ -232,17 +232,18 @@ label.field-label {
 }
 .input-wrap { position: relative; }
 .input-prefix {
-  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-  color: var(--text-faint); font-size: 14px; pointer-events: none;
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--text-mid); font-size: 15px; pointer-events: none;
+  font-family: var(--font-body); font-weight: 400;
 }
-input[type="text"], input[type="number"], select {
+input[type="text"], input[type="number"], input[type="date"], select {
   width: 100%; padding: 10px 12px; font-size: 15px;
   border: 1.5px solid #e0dbd6; border-radius: 8px;
   font-family: var(--font-body); color: var(--text); background: var(--white);
   transition: border-color 0.15s;
 }
 input:focus, select:focus { outline: none; border-color: var(--green); }
-.input-dollar { padding-left: 28px; }
+.input-dollar { padding-left: 26px; }
 
 /* Split Preview */
 .split-preview {
@@ -306,7 +307,7 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 .prop-tax-item { display: flex; flex-direction: column; gap: 4px; }
 .prop-tax-label { font-size: 11px; color: var(--text-light); font-weight: 500; }
 .prop-tax-item input { font-size: 13px; padding: 6px 8px 6px 22px; }
-.prop-tax-item .input-prefix { font-size: 12px; }
+.prop-tax-item .input-prefix { font-size: 13px; left: 8px; }
 .settings-divider { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
 
 /* Toast */
@@ -653,11 +654,17 @@ function renderAddExpense() {
         <input type="text" id="exp-desc" placeholder="e.g. Philippines flights, Mattress, Dinner...">
       </div>
 
-      <div class="form-group">
-        <label class="field-label">Full Amount</label>
-        <div class="input-wrap">
-          <span class="input-prefix">$</span>
-          <input type="number" id="exp-amount" step="0.01" placeholder="0.00" class="input-dollar">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="field-label">Full Amount</label>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input type="number" id="exp-amount" step="0.01" placeholder="0.00" class="input-dollar">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Date</label>
+          <input type="date" id="exp-date" value="${new Date().toISOString().slice(0, 10)}">
         </div>
       </div>
 
@@ -721,6 +728,7 @@ function renderAddExpense() {
   addBtn.addEventListener("click", () => {
     const desc = descEl.value.trim();
     const full = parseFloat(amtEl.value);
+    const dateVal = $("#exp-date").value;
     if (!desc || isNaN(full) || full === 0) return;
 
     const id = Date.now().toString();
@@ -731,7 +739,7 @@ function renderAddExpense() {
       halfAmount: half,
       fullAmount: full,
       paidBy: selectedPerson,
-      date: new Date().toISOString().slice(0, 10)
+      date: dateVal || new Date().toISOString().slice(0, 10)
     };
     saveData();
     showToast(full > 0 ? `Added ${desc} — ${fmt(half)} credit (${selectedPerson})` : `Deducted ${desc} — ${fmt(Math.abs(half))}`);

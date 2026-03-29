@@ -26,7 +26,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .setup-wrap h1 { font-family: var(--font-display); font-size: 28px; font-weight: 400; margin-bottom: 8px; }
 .setup-wrap p { color: var(--text-light); font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
 .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
-.header h1 { font-family: var(--font-display); font-size: 28px; font-weight: 400; letter-spacing: -0.02em; color: var(--text-dark); }
+.header h1 { font-family: var(--font-display); font-size: 28px; font-weight: 400; letter-spacing: -0.02em; color: var(--text-dark); font-optical-sizing: none; }
 .header-sub { font-size: 13px; color: var(--text-light); margin-top: 2px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
 .header-right { display: flex; align-items: center; gap: 12px; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 2s ease infinite; }
@@ -126,7 +126,9 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 .prop-tax-item input[type="number"] { font-size: 13px; padding: 6px 8px 6px 26px; }
 .prop-tax-item .input-prefix { font-size: 13px; left: 8px; }
 .settings-divider { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
-.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--text-dark); color: #fff; padding: 10px 24px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 100; animation: slideToast 0.25s ease; font-family: var(--font-body); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--text-dark); color: #fff; padding: 10px 24px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 100; animation: slideToast 0.25s ease; font-family: var(--font-body); box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 16px; }
+.toast-undo { background: none; border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: background 0.15s; }
+.toast-undo:hover { background: rgba(255,255,255,0.15); }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideToast { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
@@ -191,12 +193,19 @@ function fmt(n) {
 }
 
 let toastTimer;
-function showToast(msg) {
+function showToast(msg, undoFn) {
   clearTimeout(toastTimer);
   let el = $(".toast"); if (el) el.remove();
-  el = document.createElement("div"); el.className = "toast"; el.textContent = msg;
+  el = document.createElement("div"); el.className = "toast";
+  el.innerHTML = `<span>${msg}</span>`;
+  if (undoFn) {
+    const btn = document.createElement("button");
+    btn.className = "toast-undo"; btn.textContent = "Undo";
+    btn.onclick = () => { clearTimeout(toastTimer); el.remove(); undoFn(); };
+    el.appendChild(btn);
+  }
   document.body.appendChild(el);
-  toastTimer = setTimeout(() => el.remove(), 2400);
+  toastTimer = setTimeout(() => el.remove(), undoFn ? 5000 : 2400);
 }
 
 function initFirebase() {
@@ -253,7 +262,7 @@ function render() { if (!data) return; ({ dashboard: renderDashboard, add: rende
 
 function renderNav() {
   return `<div class="header"><div><h1>John & Ira</h1><p class="header-sub">${YEAR} Finance Tracker</p></div>
-    <div class="header-right"><span class="${connected ? 'status-dot' : 'status-dot offline'}"></span>
+    <div class="header-right"><span class="${connected ? 'status-dot' : 'status-dot offline'}" title="${connected ? 'Connected to database' : 'Offline — changes will sync when reconnected'}"></span>
     <div class="nav">${[["dashboard","Overview"],["add","Add Expense"],["expenses","Expenses"],["settings","Bills"]].map(([k,l]) =>
       `<button class="${currentView===k?'active':''}" data-view="${k}">${l}</button>`).join("")}</div></div></div>`;
 }
@@ -381,7 +390,19 @@ function renderExpenses() {
       <div class="expense-total"><span>Ira's total credits</span><span style="font-weight:600;color:var(--green)">${fmt(iraCredits)}</span></div>
     </div>`}</div>`;
   bindNav();
-  $$("[data-remove]").forEach(b => b.onclick = () => { delete data.expenses[b.dataset.remove]; saveData(); showToast("Removed"); });
+  $$("[data-remove]").forEach(b => b.onclick = () => {
+    const id = b.dataset.remove;
+    const backup = JSON.parse(JSON.stringify(data.expenses[id]));
+    delete data.expenses[id];
+    saveData();
+    render();
+    showToast("Expense removed", () => {
+      data.expenses[id] = backup;
+      saveData();
+      render();
+      showToast("Expense restored");
+    });
+  });
 }
 
 function renderSettings() {

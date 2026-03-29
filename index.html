@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>John & Ira — Finance Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 ::selection { background: #2d5a3d33; }
@@ -15,7 +15,7 @@
   --bg: #faf8f6; --card: #f8f5f2; --border: #e8e4df; --border-light: #f0ece8;
   --text: #2a2520; --text-dark: #1a1612; --text-mid: #5a5550;
   --text-light: #8a8580; --text-faint: #aaa5a0; --white: #ffffff;
-  --font-display: 'Fraunces', serif; --font-body: 'Outfit', sans-serif;
+  --font-display: 'Fraunces', serif; --font-title: 'DM Serif Display', serif; --font-body: 'Outfit', sans-serif;
 }
 body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
 .app { max-width: 800px; margin: 0 auto; padding: 24px 20px 80px; min-height: 100vh; }
@@ -23,10 +23,10 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .loading-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 1.2s ease infinite; }
 .loading-text { color: var(--text-light); font-size: 14px; }
 .setup-wrap { max-width: 520px; margin: 80px auto; text-align: center; }
-.setup-wrap h1 { font-family: var(--font-display); font-size: 28px; font-weight: 400; margin-bottom: 8px; }
+.setup-wrap h1 { font-family: var(--font-title); font-size: 28px; font-weight: 400; margin-bottom: 8px; }
 .setup-wrap p { color: var(--text-light); font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
 .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
-.header h1 { font-family: var(--font-display); font-size: 28px; font-weight: 400; letter-spacing: -0.02em; color: var(--text-dark); font-optical-sizing: none; }
+.header h1 { font-family: var(--font-title); font-size: 28px; font-weight: 400; letter-spacing: -0.01em; color: var(--text-dark); }
 .header-sub { font-size: 13px; color: var(--text-light); margin-top: 2px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
 .header-right { display: flex; align-items: center; gap: 12px; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 2s ease infinite; }
@@ -64,7 +64,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .chart-value.credit { color: var(--green); }
 .chart-value.owing { color: var(--red); }
 .section { margin-bottom: 36px; }
-.section-title { font-family: var(--font-display); font-size: 20px; font-weight: 400; margin-bottom: 16px; color: var(--text-dark); }
+.section-title { font-family: var(--font-title); font-size: 20px; font-weight: 400; margin-bottom: 16px; color: var(--text-dark); }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th { padding: 10px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-light); font-weight: 500; text-align: right; border-bottom: 2px solid var(--border); }
@@ -120,6 +120,15 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 .expense-total { display: flex; justify-content: space-between; padding: 16px; font-size: 15px; border-top: 2px solid var(--border); margin-top: 8px; }
 .expense-total + .expense-total { border-top: 1px solid var(--border-light); margin-top: 0; }
 .empty-text { color: var(--text-faint); font-size: 14px; padding: 40px; text-align: center; }
+.deleted-section { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
+.deleted-section h3 { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+.deleted-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--white); border: 1px dashed var(--border); border-radius: 8px; gap: 12px; opacity: 0.65; margin-bottom: 4px; }
+.deleted-item:hover { opacity: 1; }
+.deleted-info { display: flex; flex-direction: column; gap: 1px; }
+.deleted-name { font-size: 13px; color: var(--text-mid); text-decoration: line-through; }
+.deleted-meta { font-size: 11px; color: var(--text-faint); }
+.restore-btn { padding: 4px 12px; font-size: 12px; font-weight: 500; border: 1.5px solid var(--green); border-radius: 6px; background: transparent; color: var(--green); cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
+.restore-btn:hover { background: var(--green-light); }
 .prop-tax-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
 .prop-tax-item { display: flex; flex-direction: column; gap: 4px; }
 .prop-tax-label { font-size: 11px; color: var(--text-light); font-weight: 500; }
@@ -216,8 +225,13 @@ function initFirebase() {
     db.ref(".info/connected").on("value", s => { connected = s.val() === true; const d = $(".status-dot"); if (d) d.className = connected ? "status-dot" : "status-dot offline"; });
     db.ref("tracker").on("value", snap => {
       const val = snap.val();
-      if (val) { data = { bills: { ...DEFAULT_DATA.bills, ...(val.bills || {}) }, expenses: val.expenses || {} }; }
-      else { data = JSON.parse(JSON.stringify(DEFAULT_DATA)); db.ref("tracker").set(data); }
+      if (val) { data = { bills: { ...DEFAULT_DATA.bills, ...(val.bills || {}) }, expenses: val.expenses || {}, deletedExpenses: val.deletedExpenses || {} }; }
+      else { data = JSON.parse(JSON.stringify(DEFAULT_DATA)); data.deletedExpenses = {}; db.ref("tracker").set(data); }
+      // Auto-purge deleted items older than 30 days
+      const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      let purged = false;
+      Object.entries(data.deletedExpenses || {}).forEach(([id, e]) => { if (e.deletedAt && e.deletedAt < cutoff) { delete data.deletedExpenses[id]; purged = true; } });
+      if (purged) saveData();
       render();
     });
   } catch(e) { console.error(e); }
@@ -378,6 +392,8 @@ function renderAddExpense() {
 
 function renderExpenses() {
   const exps = getExpensesList(), { johnCredits, iraCredits } = getNetCredits();
+  const deleted = Object.entries(data.deletedExpenses || {}).map(([id, e]) => ({ id, ...e }));
+
   app.innerHTML = renderNav() + `<div class="fade-in"><h2 class="section-title">All Expenses</h2>
     ${exps.length === 0 ? '<p class="empty-text">No expenses yet.</p>' : `<div class="expense-list">
       ${exps.map(e => { const p = e.paidBy||'John', j = p==='John'; return `<div class="expense-item"><div class="expense-info">
@@ -385,23 +401,50 @@ function renderExpenses() {
         <span class="expense-meta"><span class="person-badge"><span class="avatar-sm ${j?'avatar-j':'avatar-i'}">${j?'J':'I'}</span>${p}</span>
           &nbsp;·&nbsp; ${e.date||'—'} &nbsp;·&nbsp; Full: ${fmt(e.fullAmount||e.halfAmount*2)}</span></div>
         <div class="expense-right"><span class="expense-amount ${e.halfAmount<0?'debit':'credit'}">${e.halfAmount<0?'-':''}${fmt(Math.abs(e.halfAmount))}</span>
-          <button class="remove-btn" data-remove="${e.id}">×</button></div></div>`; }).join("")}
+          <button class="remove-btn" data-remove="${e.id}" title="Delete">×</button></div></div>`; }).join("")}
       <div class="expense-total"><span>John's total credits</span><span style="font-weight:600;color:var(--green)">${fmt(johnCredits)}</span></div>
       <div class="expense-total"><span>Ira's total credits</span><span style="font-weight:600;color:var(--green)">${fmt(iraCredits)}</span></div>
-    </div>`}</div>`;
+    </div>`}
+    ${deleted.length > 0 ? `
+      <div class="deleted-section">
+        <h3>Recently Deleted</h3>
+        ${deleted.map(e => {
+          const p = e.paidBy||'John';
+          const daysAgo = Math.floor((Date.now() - (e.deletedAt||0)) / 86400000);
+          const when = daysAgo === 0 ? 'Today' : daysAgo === 1 ? 'Yesterday' : daysAgo + ' days ago';
+          return `<div class="deleted-item">
+            <div class="deleted-info">
+              <span class="deleted-name">${e.description}</span>
+              <span class="deleted-meta">${p} · ${fmt(e.fullAmount||e.halfAmount*2)} · Deleted ${when}</span>
+            </div>
+            <button class="restore-btn" data-restore="${e.id}">Restore</button>
+          </div>`;
+        }).join("")}
+      </div>` : ''}
+  </div>`;
   bindNav();
+
+  // Soft delete — move to deletedExpenses
   $$("[data-remove]").forEach(b => b.onclick = () => {
     const id = b.dataset.remove;
-    const backup = JSON.parse(JSON.stringify(data.expenses[id]));
+    const expense = JSON.parse(JSON.stringify(data.expenses[id]));
+    expense.deletedAt = Date.now();
+    data.deletedExpenses = data.deletedExpenses || {};
+    data.deletedExpenses[id] = expense;
     delete data.expenses[id];
     saveData();
-    render();
-    showToast("Expense removed", () => {
-      data.expenses[id] = backup;
-      saveData();
-      render();
-      showToast("Expense restored");
-    });
+    showToast("Expense moved to Recently Deleted");
+  });
+
+  // Restore from deleted
+  $$("[data-restore]").forEach(b => b.onclick = () => {
+    const id = b.dataset.restore;
+    const expense = JSON.parse(JSON.stringify(data.deletedExpenses[id]));
+    delete expense.deletedAt;
+    data.expenses[id] = expense;
+    delete data.deletedExpenses[id];
+    saveData();
+    showToast("Expense restored");
   });
 }
 

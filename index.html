@@ -9,142 +9,47 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 ::selection { background: #2d5a3d33; }
-
 :root {
-  --green: #2d5a3d;
-  --green-light: #2d5a3d15;
-  --green-soft: #2d5a3d88;
-  --red: #8b4444;
-  --red-soft: #8b444488;
-  --bg: #faf8f6;
-  --card: #f8f5f2;
-  --border: #e8e4df;
-  --border-light: #f0ece8;
-  --text: #2a2520;
-  --text-dark: #1a1612;
-  --text-mid: #5a5550;
-  --text-light: #8a8580;
-  --text-faint: #aaa5a0;
-  --white: #ffffff;
-  --font-display: 'Fraunces', serif;
-  --font-body: 'Outfit', sans-serif;
+  --green: #2d5a3d; --green-light: #2d5a3d15; --green-soft: #2d5a3d88;
+  --red: #8b4444; --red-soft: #8b444488;
+  --bg: #faf8f6; --card: #f8f5f2; --border: #e8e4df; --border-light: #f0ece8;
+  --text: #2a2520; --text-dark: #1a1612; --text-mid: #5a5550;
+  --text-light: #8a8580; --text-faint: #aaa5a0; --white: #ffffff;
+  --font-display: 'Fraunces', serif; --font-body: 'Outfit', sans-serif;
 }
-
-body {
-  font-family: var(--font-body);
-  background: var(--bg);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
-}
-
-.app {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 24px 20px 80px;
-  min-height: 100vh;
-}
-
-/* Loading */
-.loading-wrap {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; height: 70vh; gap: 16px;
-}
-.loading-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--green); animation: pulse 1.2s ease infinite;
-}
+body { font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+.app { max-width: 800px; margin: 0 auto; padding: 24px 20px 80px; min-height: 100vh; }
+.loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 70vh; gap: 16px; }
+.loading-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 1.2s ease infinite; }
 .loading-text { color: var(--text-light); font-size: 14px; }
-
-/* Setup screen */
-.setup-wrap {
-  max-width: 520px; margin: 80px auto; text-align: center;
-}
-.setup-wrap h1 {
-  font-family: var(--font-display); font-size: 28px;
-  font-weight: 400; margin-bottom: 8px;
-}
+.setup-wrap { max-width: 520px; margin: 80px auto; text-align: center; }
+.setup-wrap h1 { font-family: var(--font-display); font-size: 28px; font-weight: 400; margin-bottom: 8px; }
 .setup-wrap p { color: var(--text-light); font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
-.setup-wrap code {
-  display: block; text-align: left; background: var(--text-dark);
-  color: #c8c4c0; padding: 20px; border-radius: 10px;
-  font-size: 13px; line-height: 1.7; overflow-x: auto; margin-bottom: 16px;
-}
-
-/* Header */
-.header {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
-}
-.header h1 {
-  font-family: var(--font-display); font-size: 28px;
-  font-weight: 400; letter-spacing: -0.02em; color: var(--text-dark);
-}
-.header-sub {
-  font-size: 13px; color: var(--text-light); margin-top: 2px;
-  letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500;
-}
+.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+.header h1 { font-family: var(--font-display); font-size: 28px; font-weight: 400; letter-spacing: -0.02em; color: var(--text-dark); }
+.header-sub { font-size: 13px; color: var(--text-light); margin-top: 2px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
 .header-right { display: flex; align-items: center; gap: 12px; }
-.saving-badge {
-  font-size: 11px; color: var(--green); background: var(--green-light);
-  padding: 3px 10px; border-radius: 20px; font-weight: 500;
-  animation: fadeIn 0.2s ease;
-}
-.status-dot {
-  width: 7px; height: 7px; border-radius: 50%; background: var(--green);
-  display: inline-block; animation: pulse 2s ease infinite;
-}
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 2s ease infinite; }
 .status-dot.offline { background: var(--red); animation: none; }
-
-/* Nav */
 .nav { display: flex; gap: 2px; background: #f0ece8; border-radius: 10px; padding: 3px; }
-.nav button {
-  padding: 7px 14px; font-size: 13px; font-weight: 500;
-  border: none; background: transparent; border-radius: 8px;
-  cursor: pointer; color: var(--text-light); font-family: var(--font-body);
-  transition: all 0.15s;
-}
-.nav button.active {
-  background: var(--white); color: var(--text-dark);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
+.nav button { padding: 7px 14px; font-size: 13px; font-weight: 500; border: none; background: transparent; border-radius: 8px; cursor: pointer; color: var(--text-light); font-family: var(--font-body); transition: all 0.15s; }
+.nav button.active { background: var(--white); color: var(--text-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 .nav button:hover:not(.active) { color: var(--text-mid); }
-
-/* Status Card */
-.status-card {
-  border-radius: 16px; padding: 28px 32px; color: #fff; margin-bottom: 24px;
-}
+.status-card { border-radius: 16px; padding: 28px 32px; color: #fff; margin-bottom: 24px; }
 .status-card.credit { background: linear-gradient(135deg, #1a3a28 0%, #2d5a3d 100%); }
 .status-card.owing { background: linear-gradient(135deg, #5a2d2d 0%, #8b4444 100%); }
-.status-top {
-  display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
-}
+.status-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .status-label { font-size: 11px; letter-spacing: 0.12em; font-weight: 600; opacity: 0.8; }
 .status-month { font-size: 13px; opacity: 0.7; font-weight: 300; }
-.status-amount {
-  font-family: var(--font-display); font-size: 38px;
-  font-weight: 300; margin-bottom: 8px; letter-spacing: -0.02em;
-}
+.status-amount { font-family: var(--font-display); font-size: 38px; font-weight: 300; margin-bottom: 8px; letter-spacing: -0.02em; }
 .status-footer { font-size: 14px; opacity: 0.85; font-weight: 300; line-height: 1.5; }
-
-/* Stats */
 .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
-.stat-card {
-  background: var(--card); border-radius: 12px; padding: 18px 20px;
-  display: flex; flex-direction: column; gap: 4px;
-}
-.stat-label {
-  font-size: 11px; color: var(--text-light); text-transform: uppercase;
-  letter-spacing: 0.06em; font-weight: 500;
-}
+.stat-card { background: var(--card); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
+.stat-label { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
 .stat-value { font-family: var(--font-display); font-size: 22px; font-weight: 400; color: var(--text-dark); }
 .stat-sub { font-size: 12px; color: var(--text-faint); }
-
-/* Chart */
 .chart-wrap { display: flex; gap: 2px; align-items: stretch; height: 200px; padding: 0 4px; }
-.chart-col {
-  flex: 1; display: flex; flex-direction: column; align-items: center;
-  gap: 4px; position: relative;
-}
+.chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .chart-col.future { opacity: 0.45; }
 .chart-bar-wrap { flex: 1; width: 60%; display: flex; flex-direction: column; }
 .chart-bar { width: 100%; transition: height 0.4s ease; min-height: 2px; }
@@ -158,130 +63,51 @@ body {
 .chart-value { font-size: 9px; font-weight: 500; }
 .chart-value.credit { color: var(--green); }
 .chart-value.owing { color: var(--red); }
-
-/* Section */
 .section { margin-bottom: 36px; }
-.section-title {
-  font-family: var(--font-display); font-size: 20px;
-  font-weight: 400; margin-bottom: 16px; color: var(--text-dark);
-}
-
-/* Table */
+.section-title { font-family: var(--font-display); font-size: 20px; font-weight: 400; margin-bottom: 16px; color: var(--text-dark); }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
-th {
-  padding: 10px 16px; font-size: 11px; text-transform: uppercase;
-  letter-spacing: 0.06em; color: var(--text-light); font-weight: 500;
-  text-align: right; border-bottom: 2px solid var(--border);
-}
+th { padding: 10px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-light); font-weight: 500; text-align: right; border-bottom: 2px solid var(--border); }
 th:first-child { text-align: left; }
-td {
-  padding: 12px 16px; font-size: 14px; text-align: right;
-  border-bottom: 1px solid var(--border-light); font-variant-numeric: tabular-nums;
-}
+td { padding: 12px 16px; font-size: 14px; text-align: right; border-bottom: 1px solid var(--border-light); font-variant-numeric: tabular-nums; }
 td:first-child { text-align: left; }
 tr.current-row { background: #2d5a3d0a; }
 tr.future-row { opacity: 0.5; }
 .current-dot { color: var(--green); font-size: 8px; margin-right: 6px; vertical-align: middle; }
 .balance-credit { font-weight: 600; color: var(--green); }
 .balance-owing { font-weight: 600; color: var(--red); }
-
-/* Person Toggle */
-.person-toggle {
-  display: flex; gap: 8px; margin-bottom: 20px;
-}
-.person-toggle button {
-  flex: 1; padding: 10px 16px; font-size: 14px; font-weight: 500;
-  border: 1.5px solid #e0dbd6; border-radius: 8px; background: var(--white);
-  cursor: pointer; font-family: var(--font-body); color: var(--text-light);
-  transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.person-toggle button.selected {
-  border-color: var(--green); background: var(--green-light); color: var(--green); font-weight: 600;
-}
-.person-toggle button .avatar {
-  width: 24px; height: 24px; border-radius: 50%; display: flex;
-  align-items: center; justify-content: center; font-size: 11px;
-  font-weight: 600; color: var(--white);
-}
+.who-owes { font-size: 11px; font-weight: 400; color: var(--text-light); display: block; margin-top: 2px; }
+.person-toggle { display: flex; gap: 8px; margin-bottom: 20px; }
+.person-toggle button { flex: 1; padding: 10px 16px; font-size: 14px; font-weight: 500; border: 1.5px solid #e0dbd6; border-radius: 8px; background: var(--white); cursor: pointer; font-family: var(--font-body); color: var(--text-light); transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.person-toggle button.selected { border-color: var(--green); background: var(--green-light); color: var(--green); font-weight: 600; }
+.person-toggle button .avatar { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--white); }
 .avatar-j { background: #4a6fa5; }
 .avatar-i { background: #a56a8c; }
-
-/* Person Badge */
-.person-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 11px; font-weight: 500; padding: 2px 8px 2px 3px;
-  border-radius: 12px; background: var(--card); border: 1px solid var(--border);
-}
-.person-badge .avatar-sm {
-  width: 18px; height: 18px; border-radius: 50%; display: flex;
-  align-items: center; justify-content: center; font-size: 9px;
-  font-weight: 600; color: var(--white);
-}
-
-/* Form */
+.person-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; padding: 2px 8px 2px 3px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); }
+.person-badge .avatar-sm { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: var(--white); }
 .form-section { max-width: 560px; }
 .form-hint { font-size: 14px; color: var(--text-light); margin-bottom: 24px; line-height: 1.5; }
 .form-group { margin-bottom: 20px; }
 .form-row { display: flex; gap: 16px; }
 .form-row .form-group { flex: 1; }
-label.field-label {
-  display: block; font-size: 12px; font-weight: 600;
-  color: var(--text-mid); margin-bottom: 6px;
-  text-transform: uppercase; letter-spacing: 0.04em;
-}
+label.field-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-mid); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
 .input-wrap { position: relative; }
-.input-prefix {
-  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-  color: var(--text-mid); font-size: 15px; pointer-events: none;
-  font-family: var(--font-body); font-weight: 400;
-}
-input[type="text"], input[type="number"], input[type="date"], select {
-  width: 100%; padding: 10px 12px; font-size: 15px;
-  border: 1.5px solid #e0dbd6; border-radius: 8px;
-  font-family: var(--font-body); color: var(--text); background: var(--white);
-  transition: border-color 0.15s;
-}
+.input-prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-mid); font-size: 15px; pointer-events: none; font-family: var(--font-body); }
+input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 10px 12px; font-size: 15px; border: 1.5px solid #e0dbd6; border-radius: 8px; font-family: var(--font-body); color: var(--text); background: var(--white); transition: border-color 0.15s; }
 input[type="number"].input-dollar { padding-left: 32px; }
 input:focus, select:focus { outline: none; border-color: var(--green); }
-
-/* Split Preview */
-.split-preview {
-  background: var(--card); border-radius: 12px; padding: 20px;
-  margin-top: 8px; margin-bottom: 24px; border-left: 3px solid var(--green);
-}
+.split-preview { background: var(--card); border-radius: 12px; padding: 20px; margin-top: 8px; margin-bottom: 24px; border-left: 3px solid var(--green); }
 .split-preview.return { border-left-color: var(--red); }
 .split-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
 .split-divider { height: 1px; background: #e0dbd6; margin: 8px 0; }
-
-/* Buttons */
 .btn-row { display: flex; gap: 12px; margin-top: 28px; }
-.btn-primary {
-  padding: 11px 28px; font-size: 14px; font-weight: 600;
-  border: none; border-radius: 8px; background: var(--green);
-  color: #fff; cursor: pointer; font-family: var(--font-body); transition: opacity 0.15s;
-}
+.btn-primary { padding: 11px 28px; font-size: 14px; font-weight: 600; border: none; border-radius: 8px; background: var(--green); color: #fff; cursor: pointer; font-family: var(--font-body); transition: opacity 0.15s; }
 .btn-primary:disabled { opacity: 0.4; cursor: default; }
 .btn-primary:hover:not(:disabled) { opacity: 0.9; }
-.btn-secondary {
-  padding: 11px 28px; font-size: 14px; font-weight: 500;
-  border: 1.5px solid #e0dbd6; border-radius: 8px;
-  background: transparent; color: var(--text-light); cursor: pointer;
-  font-family: var(--font-body);
-}
-.btn-danger {
-  padding: 9px 20px; font-size: 13px; font-weight: 500;
-  border: 1.5px solid #d4a0a0; border-radius: 8px;
-  background: transparent; color: var(--red); cursor: pointer;
-  font-family: var(--font-body);
-}
-
-/* Expense List */
+.btn-secondary { padding: 11px 28px; font-size: 14px; font-weight: 500; border: 1.5px solid #e0dbd6; border-radius: 8px; background: transparent; color: var(--text-light); cursor: pointer; font-family: var(--font-body); }
+.btn-danger { padding: 9px 20px; font-size: 13px; font-weight: 500; border: 1.5px solid #d4a0a0; border-radius: 8px; background: transparent; color: var(--red); cursor: pointer; font-family: var(--font-body); }
 .expense-list { display: flex; flex-direction: column; gap: 2px; }
-.expense-item {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 14px 16px; background: var(--card); border-radius: 10px; gap: 16px;
-}
+.expense-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--card); border-radius: 10px; gap: 16px; }
 .expense-info { display: flex; flex-direction: column; gap: 2px; }
 .expense-name { font-size: 14px; font-weight: 500; }
 .expense-meta { font-size: 12px; color: var(--text-light); display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
@@ -289,43 +115,22 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 .expense-amount { font-family: var(--font-display); font-size: 16px; font-weight: 400; }
 .expense-amount.credit { color: var(--green); }
 .expense-amount.debit { color: var(--red); }
-.remove-btn {
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 1.5px solid #e0dbd6; background: transparent;
-  cursor: pointer; font-size: 16px; color: #aaa;
-  display: flex; align-items: center; justify-content: center; line-height: 1;
-}
+.remove-btn { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #e0dbd6; background: transparent; cursor: pointer; font-size: 16px; color: #aaa; display: flex; align-items: center; justify-content: center; line-height: 1; }
 .remove-btn:hover { border-color: var(--red); color: var(--red); }
-.expense-total {
-  display: flex; justify-content: space-between; padding: 16px;
-  font-size: 15px; border-top: 2px solid var(--border); margin-top: 8px;
-}
+.expense-total { display: flex; justify-content: space-between; padding: 16px; font-size: 15px; border-top: 2px solid var(--border); margin-top: 8px; }
+.expense-total + .expense-total { border-top: 1px solid var(--border-light); margin-top: 0; }
 .empty-text { color: var(--text-faint); font-size: 14px; padding: 40px; text-align: center; }
-
-/* Settings Property Tax Grid */
 .prop-tax-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
 .prop-tax-item { display: flex; flex-direction: column; gap: 4px; }
 .prop-tax-label { font-size: 11px; color: var(--text-light); font-weight: 500; }
 .prop-tax-item input[type="number"] { font-size: 13px; padding: 6px 8px 6px 26px; }
 .prop-tax-item .input-prefix { font-size: 13px; left: 8px; }
 .settings-divider { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
-
-/* Toast */
-.toast {
-  position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-  background: var(--text-dark); color: #fff; padding: 10px 24px;
-  border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 100;
-  animation: slideToast 0.25s ease; font-family: var(--font-body);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
-
-/* Animations */
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--text-dark); color: #fff; padding: 10px 24px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 100; animation: slideToast 0.25s ease; font-family: var(--font-body); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideToast { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
 .fade-in { animation: fadeIn 0.3s ease; }
-
-/* Responsive */
 @media (max-width: 600px) {
   .stats-row { grid-template-columns: 1fr; }
   .nav { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -342,22 +147,12 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 </style>
 </head>
 <body>
-
 <div class="app" id="app">
-  <div class="loading-wrap">
-    <div class="loading-dot"></div>
-    <p class="loading-text">Loading your tracker...</p>
-  </div>
+  <div class="loading-wrap"><div class="loading-dot"></div><p class="loading-text">Loading your tracker...</p></div>
 </div>
-
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-
 <script>
-// ============================================================
-// FIREBASE CONFIG — Replace these values with your own
-// ============================================================
 const firebaseConfig = {
   apiKey: "AIzaSyDoqwOrZLQUSvidZroWSu5QBj3HrO4iQzo",
   authDomain: "john-ira-finance.firebaseapp.com",
@@ -367,507 +162,258 @@ const firebaseConfig = {
   messagingSenderId: "995151790191",
   appId: "1:995151790191:web:c3c7ad6b4c075f4c1f8d9a"
 };
-// ============================================================
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const YEAR = 2026;
 
+// Bills = FULL amounts (what Ira actually pays). John's half is calculated automatically.
 const DEFAULT_DATA = {
   bills: {
-    mortgage: 584.88,
-    condoFees: 465.54,
-    parking: 100,
-    propertyTax: [0, 0, 285.56, 285.50, 285.50, 142.76, 142.76, 142.76, 0, 0, 0, 0]
+    mortgage: 1169.76,
+    condoFees: 931.08,
+    parking: 200,
+    propertyTax: [0, 0, 571.12, 571.00, 571.00, 285.52, 285.52, 285.52, 0, 0, 0, 0]
   },
   expenses: {
     "phil-1": { description: "Philippines Trip", halfAmount: 3699.45, fullAmount: 7398.90, date: "2026-01-07", paidBy: "John" }
   }
 };
 
-// State
-let data = null;
-let db = null;
-let currentView = "dashboard";
-let connected = false;
-
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
+let data = null, db = null, currentView = "dashboard", connected = false;
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
 const app = $("#app");
 
-// Format currency
 function fmt(n) {
-  const abs = Math.abs(n);
-  return (n < 0 ? "-" : "") + "$" + abs.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const a = Math.abs(n);
+  return (n < 0 ? "-" : "") + "$" + a.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// Toast
 let toastTimer;
 function showToast(msg) {
   clearTimeout(toastTimer);
-  let el = $(".toast");
-  if (el) el.remove();
-  el = document.createElement("div");
-  el.className = "toast";
-  el.textContent = msg;
+  let el = $(".toast"); if (el) el.remove();
+  el = document.createElement("div"); el.className = "toast"; el.textContent = msg;
   document.body.appendChild(el);
   toastTimer = setTimeout(() => el.remove(), 2400);
 }
 
-// Firebase init
 function initFirebase() {
-  if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-    showSetupScreen();
-    return;
-  }
+  if (firebaseConfig.apiKey === "YOUR_API_KEY") { app.innerHTML = '<div class="setup-wrap fade-in"><h1>John & Ira</h1><p>Firebase not configured.</p></div>'; return; }
   try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
-
-    // Connection state
-    db.ref(".info/connected").on("value", (snap) => {
-      connected = snap.val() === true;
-      const dot = $(".status-dot");
-      if (dot) {
-        dot.className = connected ? "status-dot" : "status-dot offline";
-      }
-    });
-
-    // Listen for data changes
-    db.ref("tracker").on("value", (snapshot) => {
-      const val = snapshot.val();
-      if (val) {
-        data = {
-          bills: { ...DEFAULT_DATA.bills, ...(val.bills || {}) },
-          expenses: val.expenses || {}
-        };
-      } else {
-        // First time — seed with defaults
-        data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-        db.ref("tracker").set(data);
-      }
+    db.ref(".info/connected").on("value", s => { connected = s.val() === true; const d = $(".status-dot"); if (d) d.className = connected ? "status-dot" : "status-dot offline"; });
+    db.ref("tracker").on("value", snap => {
+      const val = snap.val();
+      if (val) { data = { bills: { ...DEFAULT_DATA.bills, ...(val.bills || {}) }, expenses: val.expenses || {} }; }
+      else { data = JSON.parse(JSON.stringify(DEFAULT_DATA)); db.ref("tracker").set(data); }
       render();
     });
-  } catch (e) {
-    console.error("Firebase init error:", e);
-    showSetupScreen();
-  }
+  } catch(e) { console.error(e); }
 }
 
-function saveData() {
-  if (!db || !data) return;
-  db.ref("tracker").set(data);
-}
+function saveData() { if (db && data) db.ref("tracker").set(data); }
 
-function showSetupScreen() {
-  app.innerHTML = `
-    <div class="setup-wrap fade-in">
-      <h1>John & Ira</h1>
-      <p>Finance tracker needs Firebase to be configured.<br>
-      Open <strong>index.html</strong> and replace the Firebase config at the top of the script.</p>
-      <code>const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  databaseURL: "https://your-project-default-rtdb...",
-  projectId: "your-project",
-  ...
-};</code>
-      <p style="font-size:12px; color:#aaa;">See the setup guide for step-by-step instructions.</p>
-    </div>`;
-}
+// ── CALCULATIONS ──
+// Balance from John's perspective: positive = John owes Ira, negative = John has credit
+// Ira pays all bills → John owes half each month
+// John pays shared expense → Ira owes John half (credit for John)
+// Ira pays shared expense → John owes Ira half (debit for John)
 
-// Compute
-function getMonthBill(i) {
-  const b = data.bills;
-  return b.mortgage + b.condoFees + b.parking + (b.propertyTax[i] || 0);
-}
+function getFullBill(i) { const b = data.bills; return b.mortgage + b.condoFees + b.parking + (b.propertyTax[i] || 0); }
+function getHalfBill(i) { return getFullBill(i) / 2; }
 
-function getExpensesList() {
-  if (!data.expenses) return [];
-  return Object.entries(data.expenses).map(([id, exp]) => ({ id, ...exp }));
-}
+function getExpensesList() { if (!data.expenses) return []; return Object.entries(data.expenses).map(([id, e]) => ({ id, ...e })); }
 
-function getTotalCredits() {
-  return getExpensesList().reduce((s, e) => s + e.halfAmount, 0);
+function getNetCredits() {
+  let johnCredits = 0, iraCredits = 0;
+  getExpensesList().forEach(e => {
+    const half = Math.abs(e.halfAmount);
+    const person = e.paidBy || "John";
+    if (e.halfAmount < 0) { if (person === "John") johnCredits -= half; else iraCredits -= half; }
+    else { if (person === "John") johnCredits += half; else iraCredits += half; }
+  });
+  return { johnCredits, iraCredits, net: johnCredits - iraCredits };
 }
 
 function computeBalances() {
-  const totalCredits = getTotalCredits();
-  let running = -totalCredits;
+  const { net } = getNetCredits();
+  let running = -net; // negative = John has credit
   return MONTHS.map((name, i) => {
-    running += getMonthBill(i);
-    return { month: name, short: SHORT[i], idx: i, bills: getMonthBill(i), running };
+    const full = getFullBill(i), half = full / 2;
+    running += half;
+    return { month: name, short: SHORT[i], idx: i, fullBill: full, halfBill: half, running };
   });
 }
 
-// Render
-function render() {
-  if (!data) return;
-  switch (currentView) {
-    case "dashboard": renderDashboard(); break;
-    case "add": renderAddExpense(); break;
-    case "expenses": renderExpenses(); break;
-    case "settings": renderSettings(); break;
-  }
-}
+// ── RENDER ──
+function render() { if (!data) return; ({ dashboard: renderDashboard, add: renderAddExpense, expenses: renderExpenses, settings: renderSettings }[currentView] || renderDashboard)(); }
 
 function renderNav() {
-  const tabs = [
-    ["dashboard", "Overview"],
-    ["add", "Add Expense"],
-    ["expenses", "Expenses"],
-    ["settings", "Bills"]
-  ];
-  return `
-    <div class="header">
-      <div>
-        <h1>John & Ira</h1>
-        <p class="header-sub">${YEAR} Finance Tracker</p>
-      </div>
-      <div class="header-right">
-        <span class="${connected ? 'status-dot' : 'status-dot offline'}"></span>
-        <div class="nav">
-          ${tabs.map(([key, label]) => `
-            <button class="${currentView === key ? 'active' : ''}" data-view="${key}">${label}</button>
-          `).join("")}
-        </div>
-      </div>
-    </div>`;
+  return `<div class="header"><div><h1>John & Ira</h1><p class="header-sub">${YEAR} Finance Tracker</p></div>
+    <div class="header-right"><span class="${connected ? 'status-dot' : 'status-dot offline'}"></span>
+    <div class="nav">${[["dashboard","Overview"],["add","Add Expense"],["expenses","Expenses"],["settings","Bills"]].map(([k,l]) =>
+      `<button class="${currentView===k?'active':''}" data-view="${k}">${l}</button>`).join("")}</div></div></div>`;
 }
 
 function renderDashboard() {
-  const balances = computeBalances();
-  const now = new Date();
-  const curMonth = now.getFullYear() === YEAR ? now.getMonth() : 0;
-  const curBal = balances[curMonth]?.running ?? 0;
-  const coveredThrough = balances.reduce((last, b, i) => b.running <= 0 ? i : last, -1);
-  const totalExp = getTotalCredits();
-  const billsYTD = balances.slice(0, curMonth + 1).reduce((s, b) => s + b.bills, 0);
-  const maxAbs = Math.max(...balances.map(b => Math.abs(b.running)), 1);
+  const bal = computeBalances(), now = new Date();
+  const cm = now.getFullYear() === YEAR ? now.getMonth() : 0;
+  const cur = bal[cm]?.running ?? 0;
+  const { johnCredits, iraCredits } = getNetCredits();
+  const covered = bal.reduce((last, b, i) => b.running <= 0 ? i : last, -1);
+  const johnOwes = cur > 0;
+  const billsYTD = bal.slice(0, cm + 1).reduce((s, b) => s + b.halfBill, 0);
+  const maxAbs = Math.max(...bal.map(b => Math.abs(b.running)), 1);
 
-  let coverMsg;
-  if (coveredThrough >= 11) coverMsg = "Covered through December — all year!";
-  else if (coveredThrough >= 0) coverMsg = `Covered through ${MONTHS[coveredThrough]}. Start paying in ${MONTHS[coveredThrough + 1]}.`;
-  else coverMsg = `You owe starting ${MONTHS[0]}.`;
+  let label, amount, footer;
+  if (johnOwes) {
+    label = "JOHN OWES IRA"; amount = fmt(cur); footer = "John's expense credits have been used up.";
+  } else {
+    label = "JOHN IS COVERED"; amount = fmt(Math.abs(cur)) + " credit";
+    footer = covered >= 11 ? "John won't have to pay all year!" : covered >= cm ? `John doesn't need to pay until ${MONTHS[covered + 1]}.` : "Credits running low.";
+  }
 
-  app.innerHTML = renderNav() + `
-    <div class="fade-in">
-      <div class="status-card ${curBal <= 0 ? 'credit' : 'owing'}">
-        <div class="status-top">
-          <span class="status-label">${curBal <= 0 ? "YOU'RE IN THE CLEAR" : "BALANCE OWING"}</span>
-          <span class="status-month">${MONTHS[curMonth]} ${YEAR}</span>
-        </div>
-        <div class="status-amount">${curBal <= 0 ? fmt(Math.abs(curBal)) + " credit" : fmt(curBal) + " owed"}</div>
-        <div class="status-footer">${coverMsg}</div>
-      </div>
-
-      <div class="stats-row">
-        <div class="stat-card">
-          <span class="stat-label">Trip Credits</span>
-          <span class="stat-value">${fmt(totalExp)}</span>
-          <span class="stat-sub">${getExpensesList().length} expense${getExpensesList().length !== 1 ? 's' : ''}</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Bills YTD</span>
-          <span class="stat-value">${fmt(billsYTD)}</span>
-          <span class="stat-sub">Your half through ${SHORT[curMonth]}</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Monthly Bill</span>
-          <span class="stat-value">${fmt(getMonthBill(curMonth))}</span>
-          <span class="stat-sub">Your share this month</span>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2 class="section-title">Running Balance</h2>
-        <div class="chart-wrap">
-          ${balances.map((b, i) => {
-            const pct = (Math.abs(b.running) / maxAbs) * 100;
-            const isCredit = b.running <= 0;
-            const isCur = i === curMonth;
-            const isFut = i > curMonth;
-            return `
-              <div class="chart-col ${isFut ? 'future' : ''}">
-                <div class="chart-bar-wrap">
-                  ${isCredit ? `
-                    <div style="flex:1"></div>
-                    <div class="chart-bar credit ${isCur ? 'current' : ''}" style="height:${Math.max(pct * 0.5, 3)}%"></div>
-                  ` : `
-                    <div class="chart-bar owing ${isCur ? 'current' : ''}" style="height:${Math.max(pct * 0.5, 3)}%"></div>
-                    <div style="flex:1"></div>
-                  `}
-                </div>
-                <div class="chart-zero"></div>
-                <span class="chart-label ${isCur ? 'current' : ''}">${SHORT[i]}</span>
-                <span class="chart-value ${isCredit ? 'credit' : 'owing'}">${fmt(b.running)}</span>
-              </div>`;
-          }).join("")}
-        </div>
-      </div>
-
-      <div class="section">
-        <h2 class="section-title">Monthly Breakdown</h2>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>Month</th>
-              <th>Bills (Your Half)</th>
-              <th>Running Balance</th>
-            </tr></thead>
-            <tbody>
-              ${balances.map((b, i) => {
-                const isCur = i === curMonth;
-                const isFut = i > curMonth;
-                return `<tr class="${isCur ? 'current-row' : ''} ${isFut ? 'future-row' : ''}">
-                  <td style="font-weight:${isCur ? 600 : 400}">${isCur ? '<span class="current-dot">●</span>' : ''}${b.month}</td>
-                  <td>${fmt(b.bills)}</td>
-                  <td class="${b.running <= 0 ? 'balance-credit' : 'balance-owing'}">${fmt(b.running)}</td>
-                </tr>`;
-              }).join("")}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>`;
+  app.innerHTML = renderNav() + `<div class="fade-in">
+    <div class="status-card ${johnOwes ? 'owing' : 'credit'}">
+      <div class="status-top"><span class="status-label">${label}</span><span class="status-month">${MONTHS[cm]} ${YEAR}</span></div>
+      <div class="status-amount">${amount}</div>
+      <div class="status-footer">${footer}</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><span class="stat-label">John's Credits</span><span class="stat-value">${fmt(johnCredits)}</span><span class="stat-sub">From John's shared expenses</span></div>
+      <div class="stat-card"><span class="stat-label">Ira's Credits</span><span class="stat-value">${fmt(iraCredits)}</span><span class="stat-sub">From Ira's shared expenses</span></div>
+      <div class="stat-card"><span class="stat-label">John's Bills YTD</span><span class="stat-value">${fmt(billsYTD)}</span><span class="stat-sub">John's half through ${SHORT[cm]}</span></div>
+    </div>
+    <div class="section"><h2 class="section-title">Running Balance</h2>
+      <div class="chart-wrap">${bal.map((b,i) => {
+        const pct = (Math.abs(b.running)/maxAbs)*100, cr = b.running<=0, cu = i===cm, fu = i>cm;
+        return `<div class="chart-col ${fu?'future':''}"><div class="chart-bar-wrap">${cr ?
+          `<div style="flex:1"></div><div class="chart-bar credit ${cu?'current':''}" style="height:${Math.max(pct*0.5,3)}%"></div>` :
+          `<div class="chart-bar owing ${cu?'current':''}" style="height:${Math.max(pct*0.5,3)}%"></div><div style="flex:1"></div>`
+        }</div><div class="chart-zero"></div><span class="chart-label ${cu?'current':''}">${SHORT[i]}</span><span class="chart-value ${cr?'credit':'owing'}">${fmt(b.running)}</span></div>`;
+      }).join("")}</div>
+    </div>
+    <div class="section"><h2 class="section-title">Monthly Breakdown</h2>
+      <div class="table-wrap"><table><thead><tr><th>Month</th><th>Full Bill</th><th>John's Half</th><th>Balance</th></tr></thead><tbody>
+        ${bal.map((b,i) => {
+          const cu = i===cm, fu = i>cm, cr = b.running<=0;
+          return `<tr class="${cu?'current-row':''} ${fu?'future-row':''}">
+            <td style="font-weight:${cu?600:400}">${cu?'<span class="current-dot">●</span>':''}${b.month}</td>
+            <td>${fmt(b.fullBill)}</td><td>${fmt(b.halfBill)}</td>
+            <td class="${cr?'balance-credit':'balance-owing'}">${fmt(b.running)}<span class="who-owes">${cr?'John has credit':'John owes Ira'}</span></td></tr>`;
+        }).join("")}
+      </tbody></table></div>
+    </div>
+  </div>`;
   bindNav();
 }
 
 function renderAddExpense() {
-  app.innerHTML = renderNav() + `
-    <div class="form-section fade-in">
-      <h2 class="section-title">Add a Shared Expense</h2>
-      <p class="form-hint">Enter the full amount paid — we'll split it in half automatically. For returns, enter a negative amount.</p>
-
-      <label class="field-label">Who paid?</label>
-      <div class="person-toggle">
-        <button id="pick-john" class="selected" data-person="John">
-          <span class="avatar avatar-j">J</span> John
-        </button>
-        <button id="pick-ira" data-person="Ira">
-          <span class="avatar avatar-i">I</span> Ira
-        </button>
-      </div>
-
-      <div class="form-group">
-        <label class="field-label">What was it for?</label>
-        <input type="text" id="exp-desc" placeholder="e.g. Philippines flights, Mattress, Dinner...">
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="field-label">Full Amount</label>
-          <div class="input-wrap">
-            <span class="input-prefix">$</span>
-            <input type="number" id="exp-amount" step="0.01" placeholder="0.00" class="input-dollar">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="field-label">Date</label>
-          <input type="date" id="exp-date" value="${new Date().toISOString().slice(0, 10)}">
-        </div>
-      </div>
-
-      <div id="split-preview"></div>
-
-      <div class="btn-row">
-        <button class="btn-secondary" data-view="dashboard">Cancel</button>
-        <button class="btn-primary" id="btn-add" disabled>Add Expense</button>
-      </div>
-    </div>`;
+  app.innerHTML = renderNav() + `<div class="form-section fade-in">
+    <h2 class="section-title">Add a Shared Expense</h2>
+    <p class="form-hint">Enter the full amount paid — we'll split it in half automatically. For returns, enter a negative amount.</p>
+    <label class="field-label">Who paid?</label>
+    <div class="person-toggle">
+      <button id="pick-john" class="selected"><span class="avatar avatar-j">J</span> John</button>
+      <button id="pick-ira"><span class="avatar avatar-i">I</span> Ira</button>
+    </div>
+    <div class="form-group"><label class="field-label">What was it for?</label>
+      <input type="text" id="exp-desc" placeholder="e.g. Philippines flights, Mattress, Dinner..."></div>
+    <div class="form-row">
+      <div class="form-group"><label class="field-label">Full Amount</label>
+        <div class="input-wrap"><span class="input-prefix">$</span>
+        <input type="number" id="exp-amount" step="0.01" placeholder="0.00" class="input-dollar"></div></div>
+      <div class="form-group"><label class="field-label">Date</label>
+        <input type="date" id="exp-date" value="${new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div id="split-preview"></div>
+    <div class="btn-row"><button class="btn-secondary" data-view="dashboard">Cancel</button>
+      <button class="btn-primary" id="btn-add" disabled>Add Expense</button></div>
+  </div>`;
   bindNav();
 
-  let selectedPerson = "John";
-  const descEl = $("#exp-desc");
-  const amtEl = $("#exp-amount");
-  const addBtn = $("#btn-add");
-  const preview = $("#split-preview");
-  const pickJohn = $("#pick-john");
-  const pickIra = $("#pick-ira");
+  let who = "John";
+  const desc = $("#exp-desc"), amt = $("#exp-amount"), btn = $("#btn-add"), prev = $("#split-preview");
 
-  pickJohn.addEventListener("click", () => {
-    selectedPerson = "John";
-    pickJohn.classList.add("selected");
-    pickIra.classList.remove("selected");
-    updatePreview();
-  });
-  pickIra.addEventListener("click", () => {
-    selectedPerson = "Ira";
-    pickIra.classList.add("selected");
-    pickJohn.classList.remove("selected");
-    updatePreview();
-  });
+  $("#pick-john").onclick = () => { who="John"; $("#pick-john").classList.add("selected"); $("#pick-ira").classList.remove("selected"); upd(); };
+  $("#pick-ira").onclick = () => { who="Ira"; $("#pick-ira").classList.add("selected"); $("#pick-john").classList.remove("selected"); upd(); };
 
-  function updatePreview() {
-    const amt = parseFloat(amtEl.value);
-    const valid = descEl.value.trim() && !isNaN(amt) && amt !== 0;
-    addBtn.disabled = !valid;
-
-    if (!isNaN(amt) && amt !== 0) {
-      const isReturn = amt < 0;
-      preview.innerHTML = `
-        <div class="split-preview ${isReturn ? 'return' : ''}">
-          <div class="split-row">
-            <span>${isReturn ? 'Return amount' : 'Full amount'} <span style="color:var(--text-faint)">(paid by ${selectedPerson})</span></span>
-            <span style="font-weight:600">${fmt(Math.abs(amt))}</span>
-          </div>
-          <div class="split-divider"></div>
-          <div class="split-row">
-            <span>${isReturn ? 'Reduces credit by' : "Each person's half"}</span>
-            <span style="font-weight:600;color:${isReturn ? 'var(--red)' : 'var(--green)'}">${fmt(Math.abs(amt) / 2)}</span>
-          </div>
-        </div>`;
-    } else {
-      preview.innerHTML = '';
-    }
+  function upd() {
+    const v = parseFloat(amt.value), ok = desc.value.trim() && !isNaN(v) && v !== 0;
+    btn.disabled = !ok;
+    if (!isNaN(v) && v !== 0) {
+      const ret = v < 0, half = Math.abs(v)/2;
+      let effect = ret ? `Reduces ${who}'s credit by` : who === "John" ? "Ira's half — credit for John" : "John's half — he owes Ira";
+      prev.innerHTML = `<div class="split-preview ${ret?'return':''}">
+        <div class="split-row"><span>${ret?'Return':'Full amount'} <span style="color:var(--text-faint)">(${who})</span></span><span style="font-weight:600">${fmt(Math.abs(v))}</span></div>
+        <div class="split-divider"></div>
+        <div class="split-row"><span>${effect}</span><span style="font-weight:600;color:${ret?'var(--red)':'var(--green)'}">${fmt(half)}</span></div></div>`;
+    } else prev.innerHTML = '';
   }
+  desc.oninput = upd; amt.oninput = upd;
 
-  descEl.addEventListener("input", updatePreview);
-  amtEl.addEventListener("input", updatePreview);
-
-  addBtn.addEventListener("click", () => {
-    const desc = descEl.value.trim();
-    const full = parseFloat(amtEl.value);
-    const dateVal = $("#exp-date").value;
-    if (!desc || isNaN(full) || full === 0) return;
-
-    const id = Date.now().toString();
-    const half = Math.round(full / 2 * 100) / 100;
+  btn.onclick = () => {
+    const d = desc.value.trim(), f = parseFloat(amt.value), dt = $("#exp-date").value;
+    if (!d || isNaN(f) || f === 0) return;
+    const half = Math.round(f/2*100)/100;
     data.expenses = data.expenses || {};
-    data.expenses[id] = {
-      description: desc,
-      halfAmount: half,
-      fullAmount: full,
-      paidBy: selectedPerson,
-      date: dateVal || new Date().toISOString().slice(0, 10)
-    };
+    data.expenses[Date.now().toString()] = { description: d, halfAmount: half, fullAmount: f, paidBy: who, date: dt || new Date().toISOString().slice(0,10) };
     saveData();
-    showToast(full > 0 ? `Added ${desc} — ${fmt(half)} credit (${selectedPerson})` : `Deducted ${desc} — ${fmt(Math.abs(half))}`);
-    currentView = "dashboard";
-    render();
-  });
+    showToast(`Added ${d} — ${fmt(Math.abs(half))} (${who})`);
+    currentView = "dashboard"; render();
+  };
 }
 
 function renderExpenses() {
-  const expenses = getExpensesList();
-  const total = getTotalCredits();
-
-  app.innerHTML = renderNav() + `
-    <div class="fade-in">
-      <h2 class="section-title">All Expenses</h2>
-      ${expenses.length === 0 ? '<p class="empty-text">No expenses yet. Add your first one!</p>' : `
-        <div class="expense-list">
-          ${expenses.map(exp => {
-            const person = exp.paidBy || 'John';
-            const isJ = person === 'John';
-            return `
-            <div class="expense-item">
-              <div class="expense-info">
-                <span class="expense-name">${exp.description}</span>
-                <span class="expense-meta">
-                  <span class="person-badge"><span class="avatar-sm ${isJ ? 'avatar-j' : 'avatar-i'}">${isJ ? 'J' : 'I'}</span>${person}</span>
-                  &nbsp;·&nbsp; ${exp.date || '—'} &nbsp;·&nbsp; Full: ${fmt(exp.fullAmount || exp.halfAmount * 2)}
-                </span>
-              </div>
-              <div class="expense-right">
-                <span class="expense-amount ${exp.halfAmount < 0 ? 'debit' : 'credit'}">${exp.halfAmount < 0 ? '-' : ''}${fmt(Math.abs(exp.halfAmount))}</span>
-                <button class="remove-btn" data-remove="${exp.id}" title="Remove">×</button>
-              </div>
-            </div>`;
-          }).join("")}
-          <div class="expense-total">
-            <span>Total Credits</span>
-            <span style="font-weight:600">${fmt(total)}</span>
-          </div>
-        </div>`}
-    </div>`;
+  const exps = getExpensesList(), { johnCredits, iraCredits } = getNetCredits();
+  app.innerHTML = renderNav() + `<div class="fade-in"><h2 class="section-title">All Expenses</h2>
+    ${exps.length === 0 ? '<p class="empty-text">No expenses yet.</p>' : `<div class="expense-list">
+      ${exps.map(e => { const p = e.paidBy||'John', j = p==='John'; return `<div class="expense-item"><div class="expense-info">
+        <span class="expense-name">${e.description}</span>
+        <span class="expense-meta"><span class="person-badge"><span class="avatar-sm ${j?'avatar-j':'avatar-i'}">${j?'J':'I'}</span>${p}</span>
+          &nbsp;·&nbsp; ${e.date||'—'} &nbsp;·&nbsp; Full: ${fmt(e.fullAmount||e.halfAmount*2)}</span></div>
+        <div class="expense-right"><span class="expense-amount ${e.halfAmount<0?'debit':'credit'}">${e.halfAmount<0?'-':''}${fmt(Math.abs(e.halfAmount))}</span>
+          <button class="remove-btn" data-remove="${e.id}">×</button></div></div>`; }).join("")}
+      <div class="expense-total"><span>John's total credits</span><span style="font-weight:600;color:var(--green)">${fmt(johnCredits)}</span></div>
+      <div class="expense-total"><span>Ira's total credits</span><span style="font-weight:600;color:var(--green)">${fmt(iraCredits)}</span></div>
+    </div>`}</div>`;
   bindNav();
-
-  $$("[data-remove]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.remove;
-      delete data.expenses[id];
-      saveData();
-      showToast("Expense removed");
-    });
-  });
+  $$("[data-remove]").forEach(b => b.onclick = () => { delete data.expenses[b.dataset.remove]; saveData(); showToast("Removed"); });
 }
 
 function renderSettings() {
   const b = data.bills;
-  app.innerHTML = renderNav() + `
-    <div class="form-section fade-in">
-      <h2 class="section-title">Monthly Bills (Your Half)</h2>
-      <p class="form-hint">These are the amounts that represent your share of shared monthly expenses.</p>
-
-      <div class="form-row">
-        ${[["mortgage","Mortgage", b.mortgage],["condoFees","Condo Fees", b.condoFees],["parking","Parking", b.parking]].map(([key, label, val]) => `
-          <div class="form-group">
-            <label class="field-label">${label}</label>
-            <div class="input-wrap">
-              <span class="input-prefix">$</span>
-              <input type="number" step="0.01" id="bill-${key}" value="${val}" class="input-dollar">
-            </div>
-          </div>`).join("")}
-      </div>
-
-      <div style="margin-top:24px">
-        <label class="field-label">Property Tax by Month (Your Half)</label>
-        <div class="prop-tax-grid">
-          ${MONTHS.map((m, i) => `
-            <div class="prop-tax-item">
-              <span class="prop-tax-label">${SHORT[i]}</span>
-              <div class="input-wrap">
-                <span class="input-prefix">$</span>
-                <input type="number" step="0.01" id="ptax-${i}" value="${b.propertyTax[i] || 0}" class="input-dollar">
-              </div>
-            </div>`).join("")}
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn-secondary" data-view="dashboard">Cancel</button>
-        <button class="btn-primary" id="btn-save-bills">Save Bills</button>
-      </div>
-
-      <div class="settings-divider">
-        <button class="btn-danger" id="btn-reset">Reset All Data to Defaults</button>
-      </div>
-    </div>`;
+  app.innerHTML = renderNav() + `<div class="form-section fade-in">
+    <h2 class="section-title">Monthly Bills</h2>
+    <p class="form-hint">Enter the full bill amounts that Ira pays each month. John's half is calculated automatically on the overview.</p>
+    <div class="form-row">
+      ${[["mortgage","Mortgage",b.mortgage],["condoFees","Condo Fees",b.condoFees],["parking","Parking",b.parking]].map(([k,l,v]) =>
+        `<div class="form-group"><label class="field-label">${l}</label><div class="input-wrap"><span class="input-prefix">$</span>
+        <input type="number" step="0.01" id="bill-${k}" value="${v}" class="input-dollar"></div></div>`).join("")}
+    </div>
+    <div style="margin-top:24px"><label class="field-label">Property Tax by Month (Full Amount)</label>
+      <div class="prop-tax-grid">${MONTHS.map((m,i) => `<div class="prop-tax-item"><span class="prop-tax-label">${SHORT[i]}</span>
+        <div class="input-wrap"><span class="input-prefix">$</span>
+        <input type="number" step="0.01" id="ptax-${i}" value="${b.propertyTax[i]||0}" class="input-dollar"></div></div>`).join("")}</div>
+    </div>
+    <div class="btn-row"><button class="btn-secondary" data-view="dashboard">Cancel</button>
+      <button class="btn-primary" id="btn-save-bills">Save Bills</button></div>
+    <div class="settings-divider"><button class="btn-danger" id="btn-reset">Reset All Data to Defaults</button></div>
+  </div>`;
   bindNav();
-
-  $("#btn-save-bills").addEventListener("click", () => {
-    data.bills = {
-      mortgage: parseFloat($("#bill-mortgage").value) || 0,
-      condoFees: parseFloat($("#bill-condoFees").value) || 0,
-      parking: parseFloat($("#bill-parking").value) || 0,
-      propertyTax: MONTHS.map((_, i) => parseFloat($(`#ptax-${i}`).value) || 0)
-    };
-    saveData();
-    showToast("Monthly bills updated");
-    currentView = "dashboard";
-    render();
-  });
-
-  $("#btn-reset").addEventListener("click", () => {
-    if (!confirm("Reset all data to defaults? This can't be undone.")) return;
-    data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-    saveData();
-    showToast("Reset to defaults");
-    render();
-  });
+  $("#btn-save-bills").onclick = () => {
+    data.bills = { mortgage: parseFloat($("#bill-mortgage").value)||0, condoFees: parseFloat($("#bill-condoFees").value)||0, parking: parseFloat($("#bill-parking").value)||0,
+      propertyTax: MONTHS.map((_,i) => parseFloat($(`#ptax-${i}`).value)||0) };
+    saveData(); showToast("Bills updated"); currentView = "dashboard"; render();
+  };
+  $("#btn-reset").onclick = () => { if (!confirm("Reset all data? Can't be undone.")) return; data = JSON.parse(JSON.stringify(DEFAULT_DATA)); saveData(); showToast("Reset"); render(); };
 }
 
-function bindNav() {
-  $$("[data-view]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      currentView = btn.dataset.view;
-      render();
-    });
-  });
-}
+function bindNav() { $$("[data-view]").forEach(b => b.onclick = () => { currentView = b.dataset.view; render(); }); }
 
-// Init
 initFirebase();
 </script>
 </body>

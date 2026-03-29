@@ -140,10 +140,10 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 }
 .remove-btn:hover { border-color: var(--red); color: var(--red); }
 .edit-btn {
-  padding: 4px 12px; font-size: 12px; font-weight: 500;
-  border: 1.5px solid #e0dbd6; border-radius: 6px;
-  background: transparent; color: var(--text-light);
-  cursor: pointer; font-family: var(--font-body); transition: all 0.15s;
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1.5px solid #e0dbd6; background: transparent;
+  cursor: pointer; font-size: 13px; color: #aaa;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
 }
 .edit-btn:hover { border-color: var(--green); color: var(--green); }
 .expense-total { display: flex; justify-content: space-between; padding: 16px; font-size: 15px; border-top: 2px solid var(--border); margin-top: 8px; }
@@ -227,6 +227,7 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
   .stat-value { font-size: 18px; }
   .expense-item { flex-direction: column; align-items: flex-start; gap: 8px; }
   .expense-right { align-self: flex-end; }
+  .edit-btn { display: none; }
   .bills-locked { grid-template-columns: 1fr; }
   .ptax-locked { grid-template-columns: repeat(3, 1fr); }
 }
@@ -629,7 +630,7 @@ function renderExpenses() {
         <span class="expense-meta"><span class="person-badge"><span class="avatar-sm ${j?'avatar-j':'avatar-i'}">${j?'J':'I'}</span>${p}</span>
           &nbsp;·&nbsp; ${e.date||'—'} &nbsp;·&nbsp; Full: ${fmt(e.fullAmount||e.halfAmount*2)}</span></div>
         <div class="expense-right"><span class="expense-amount ${e.halfAmount<0?'debit':'credit'}">${e.halfAmount<0?'-':''}${fmt(Math.abs(e.halfAmount))}</span>
-          <button class="edit-btn" data-edit="${e.id}">Edit</button>
+          <button class="edit-btn" data-edit="${e.id}" title="Edit"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 2l3 3-7 7H0V9z"/><path d="M6 3l3 3"/></svg></button>
           <button class="remove-btn" data-remove="${e.id}" title="Delete">×</button></div></div>`; }).join("")}
       <div class="expense-total"><span>John's total credits</span><span style="font-weight:600;color:var(--green)">${fmt(johnCredits)}</span></div>
       <div class="expense-total"><span>Ira's total credits</span><span style="font-weight:600;color:var(--green)">${fmt(iraCredits)}</span></div>

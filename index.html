@@ -151,6 +151,40 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 @keyframes slideToast { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
 .fade-in { animation: fadeIn 0.3s ease; }
+
+/* PIN Screen */
+.pin-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 80vh; gap: 20px; text-align: center;
+}
+.pin-wrap h1 { font-family: var(--font-title); font-size: 28px; font-weight: 400; color: var(--text-dark); }
+.pin-wrap p { color: var(--text-light); font-size: 14px; max-width: 320px; line-height: 1.5; }
+.pin-dots { display: flex; gap: 12px; margin: 8px 0; }
+.pin-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--border); background: transparent;
+  transition: all 0.15s;
+}
+.pin-dot.filled { background: var(--green); border-color: var(--green); }
+.pin-dot.error { background: var(--red); border-color: var(--red); animation: shake 0.4s ease; }
+.pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 240px; }
+.pin-key {
+  padding: 14px; font-size: 20px; font-weight: 500; border: 1.5px solid var(--border);
+  border-radius: 10px; background: var(--white); cursor: pointer;
+  font-family: var(--font-body); color: var(--text-dark); transition: all 0.1s;
+  user-select: none; -webkit-user-select: none;
+}
+.pin-key:active { background: var(--card); transform: scale(0.96); }
+.pin-key.back { font-size: 16px; color: var(--text-light); }
+.pin-key.empty { border: none; cursor: default; }
+.pin-error-msg { color: var(--red); font-size: 13px; font-weight: 500; min-height: 20px; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-4px); }
+}
+
 @media (max-width: 600px) {
   .stats-row { grid-template-columns: 1fr; }
   .nav { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -173,6 +207,7 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
   <div class="loading-wrap"><div class="loading-dot"></div><p class="loading-text">Loading your tracker...</p></div>
 </div>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 <script>
 const firebaseConfig = {
@@ -228,24 +263,161 @@ function showToast(msg, undoFn) {
   toastTimer = setTimeout(() => el.remove(), undoFn ? 5000 : 2400);
 }
 
+// SHA-256 hash
+async function hashPin(pin) {
+  const enc = new TextEncoder().encode(pin);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+let pinResolve = null;
+
 function initFirebase() {
   if (firebaseConfig.apiKey === "YOUR_API_KEY") { app.innerHTML = '<div class="setup-wrap fade-in"><h1>John & Ira</h1><p>Firebase not configured.</p></div>'; return; }
   try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
-    db.ref(".info/connected").on("value", s => { connected = s.val() === true; const d = $(".status-dot"); if (d) d.className = connected ? "status-dot" : "status-dot offline"; });
+
+    // Check if already authenticated this session
+    const sessionPin = sessionStorage.getItem('finance_pin');
+    if (sessionPin) {
+      authenticateAndLoad(sessionPin);
+      return;
+    }
+
+    // Check if PIN has been set
+    db.ref("pin").once("value").then(snap => {
+      const pinHash = snap.val();
+      if (!pinHash) {
+        showPinScreen("set");
+      } else {
+        showPinScreen("enter", pinHash);
+      }
+    }).catch(e => {
+      console.error("Error checking PIN:", e);
+      showPinScreen("enter", null);
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function authenticateAndLoad(pin) {
+  try {
+    await firebase.auth().signInAnonymously();
+    sessionStorage.setItem('finance_pin', pin);
+
+    db.ref(".info/connected").on("value", s => {
+      connected = s.val() === true;
+      const d = $(".status-dot");
+      if (d) d.className = connected ? "status-dot" : "status-dot offline";
+    });
+
     db.ref("tracker").on("value", snap => {
       const val = snap.val();
       if (val) { data = { bills: { ...DEFAULT_DATA.bills, ...(val.bills || {}) }, expenses: val.expenses || {}, deletedExpenses: val.deletedExpenses || {} }; }
       else { data = JSON.parse(JSON.stringify(DEFAULT_DATA)); data.deletedExpenses = {}; db.ref("tracker").set(data); }
-      // Auto-purge deleted items older than 30 days
       const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
       let purged = false;
       Object.entries(data.deletedExpenses || {}).forEach(([id, e]) => { if (e.deletedAt && e.deletedAt < cutoff) { delete data.deletedExpenses[id]; purged = true; } });
       if (purged) saveData();
       render();
     });
-  } catch(e) { console.error(e); }
+  } catch(e) {
+    console.error("Auth failed:", e);
+    sessionStorage.removeItem('finance_pin');
+    showPinScreen("enter", null);
+  }
+}
+
+function showPinScreen(mode, storedHash) {
+  const isSet = mode === "set";
+  let pin = "";
+  let firstPin = ""; // for confirm step during set
+  let confirming = false;
+  let errorMsg = "";
+
+  function renderPinUI() {
+    const title = isSet
+      ? (confirming ? "Confirm your PIN" : "Set a PIN")
+      : "Enter PIN";
+    const subtitle = isSet
+      ? (confirming ? "Enter the same PIN again to confirm." : "Choose a 4-digit PIN that you and Ira will use to access your tracker.")
+      : "Enter your 4-digit PIN to continue.";
+
+    app.innerHTML = `
+      <div class="pin-wrap fade-in">
+        <h1>${title}</h1>
+        <p>${subtitle}</p>
+        <div class="pin-dots">
+          ${[0,1,2,3].map(i => `<div class="pin-dot ${i < pin.length ? 'filled' : ''} ${errorMsg ? 'error' : ''}"></div>`).join("")}
+        </div>
+        <div class="pin-error-msg">${errorMsg}</div>
+        <div class="pin-keypad">
+          ${[1,2,3,4,5,6,7,8,9].map(n => `<button class="pin-key" data-key="${n}">${n}</button>`).join("")}
+          <div class="pin-key empty"></div>
+          <button class="pin-key" data-key="0">0</button>
+          <button class="pin-key back" data-key="back">←</button>
+        </div>
+      </div>`;
+
+    $$(".pin-key:not(.empty)").forEach(k => {
+      k.onclick = () => handleKey(k.dataset.key);
+    });
+  }
+
+  async function handleKey(key) {
+    errorMsg = "";
+    if (key === "back") {
+      pin = pin.slice(0, -1);
+      renderPinUI();
+      return;
+    }
+    if (pin.length >= 4) return;
+    pin += key;
+    renderPinUI();
+
+    if (pin.length === 4) {
+      if (isSet && !confirming) {
+        // First entry — move to confirm
+        firstPin = pin;
+        pin = "";
+        confirming = true;
+        setTimeout(() => renderPinUI(), 200);
+      } else if (isSet && confirming) {
+        // Confirm step
+        if (pin === firstPin) {
+          const hash = await hashPin(pin);
+          await db.ref("pin").set(hash);
+          authenticateAndLoad(pin);
+        } else {
+          errorMsg = "PINs don't match. Try again.";
+          pin = "";
+          confirming = false;
+          firstPin = "";
+          setTimeout(() => renderPinUI(), 200);
+        }
+      } else {
+        // Verify mode
+        const hash = await hashPin(pin);
+        if (storedHash && hash === storedHash) {
+          authenticateAndLoad(pin);
+        } else {
+          // If storedHash is null (error reading), try to read again
+          if (!storedHash) {
+            try {
+              const snap = await db.ref("pin").once("value");
+              storedHash = snap.val();
+              if (hash === storedHash) { authenticateAndLoad(pin); return; }
+            } catch(e) {}
+          }
+          errorMsg = "Wrong PIN. Try again.";
+          pin = "";
+          setTimeout(() => renderPinUI(), 200);
+        }
+      }
+    }
+  }
+
+  renderPinUI();
 }
 
 function saveData() { if (db && data) db.ref("tracker").set(data); }

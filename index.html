@@ -177,33 +177,25 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 }
 .pin-wrap h1 { font-family: var(--font-title); font-size: 28px; font-weight: 400; color: var(--text-dark); }
 .pin-wrap p { color: var(--text-light); font-size: 14px; max-width: 320px; line-height: 1.5; }
-.pin-input-visible {
-  width: 180px; padding: 16px 0; font-size: 32px; text-align: center;
-  letter-spacing: 16px; text-indent: 16px;
-  border: 1.5px solid var(--border); border-radius: 12px;
-  background: var(--white); color: var(--text-dark);
-  font-family: var(--font-body); font-weight: 600;
-  -webkit-text-security: disc; /* shows dots on webkit */
-  transition: border-color 0.15s;
+.pin-dots { display: flex; gap: 16px; margin: 8px 0; }
+.pin-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--border); background: transparent;
+  transition: all 0.15s;
 }
-.pin-input-visible:focus { outline: none; border-color: var(--green); }
-.pin-input-visible.error { border-color: var(--red); animation: shake 0.4s ease; }
-.pin-error-msg { color: var(--red); font-size: 13px; font-weight: 500; min-height: 20px; }
+.pin-dot.filled { background: var(--green); border-color: var(--green); }
+.pin-dot.error { background: var(--red); border-color: var(--red); animation: shake 0.4s ease; }
 .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 240px; }
 .pin-key {
-  padding: 14px; font-size: 20px; font-weight: 500; border: 1.5px solid var(--border);
-  border-radius: 10px; background: var(--white); cursor: pointer;
+  padding: 16px; font-size: 22px; font-weight: 500; border: 1.5px solid var(--border);
+  border-radius: 12px; background: var(--white); cursor: pointer;
   font-family: var(--font-body); color: var(--text-dark); transition: all 0.1s;
-  user-select: none; -webkit-user-select: none;
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
 }
-.pin-key:active { background: var(--card); transform: scale(0.96); }
-.pin-key.back { font-size: 16px; color: var(--text-light); }
-.pin-key.empty { border: none; cursor: default; }
-
-/* Hide keypad on mobile — phone keyboard is primary */
-@media (max-width: 600px) {
-  .pin-keypad { display: none; }
-}
+.pin-key:active { background: var(--card); transform: scale(0.95); }
+.pin-key.back { font-size: 18px; color: var(--text-light); }
+.pin-key.empty { border: none; cursor: default; background: transparent; }
+.pin-error-msg { color: var(--red); font-size: 13px; font-weight: 500; min-height: 20px; }
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-6px); }
@@ -373,9 +365,9 @@ function showPinScreen(mode, storedHash) {
       <div class="pin-wrap fade-in">
         <h1>${title}</h1>
         <p>${subtitle}</p>
-        <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4"
-          class="pin-input-visible ${errorMsg ? 'error' : ''}" id="pin-input"
-          autocomplete="off" placeholder="····" autofocus>
+        <div class="pin-dots">
+          ${[0,1,2,3].map(i => `<div class="pin-dot ${i < pin.length ? 'filled' : ''} ${errorMsg ? 'error' : ''}"></div>`).join("")}
+        </div>
         <div class="pin-error-msg">${errorMsg}</div>
         <div class="pin-keypad">
           ${[1,2,3,4,5,6,7,8,9].map(n => `<button class="pin-key" data-key="${n}">${n}</button>`).join("")}
@@ -385,31 +377,18 @@ function showPinScreen(mode, storedHash) {
         </div>
       </div>`;
 
-    const inp = $("#pin-input");
-    inp.value = pin;
-
-    // Auto-focus — works in most contexts
-    setTimeout(() => inp.focus(), 50);
-
-    // Desktop keypad
     $$(".pin-key:not(.empty)").forEach(k => {
       k.onclick = () => {
+        errorMsg = "";
         if (k.dataset.key === "back") {
           pin = pin.slice(0, -1);
-          inp.value = pin;
+          renderPinUI();
         } else if (pin.length < 4) {
           pin += k.dataset.key;
-          inp.value = pin;
+          renderPinUI();
           if (pin.length === 4) checkPin();
         }
       };
-    });
-
-    // Mobile/keyboard input — don't re-render, just check at 4 digits
-    inp.addEventListener("input", () => {
-      pin = inp.value.replace(/\D/g, '').slice(0, 4);
-      inp.value = pin;
-      if (pin.length === 4) checkPin();
     });
 
     async function checkPin() {

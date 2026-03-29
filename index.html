@@ -848,9 +848,18 @@ function bindNav() {
 
 initFirebase();
 
-// Register service worker for PWA
+// Register service worker for PWA — auto-reload on updates
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'activated' && navigator.serviceWorker.controller) {
+          window.location.reload();
+        }
+      });
+    });
+  }).catch(() => {});
 }
 </script>
 </body>

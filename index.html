@@ -132,8 +132,14 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 .expense-amount { font-family: var(--font-display); font-size: 16px; font-weight: 400; }
 .expense-amount.credit { color: var(--green); }
 .expense-amount.debit { color: var(--red); }
-.remove-btn { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #e0dbd6; background: transparent; cursor: pointer; font-size: 16px; color: #aaa; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.remove-btn, .edit-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1.5px solid #e0dbd6; background: transparent;
+  cursor: pointer; font-size: 14px; color: #aaa;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
+}
 .remove-btn:hover { border-color: var(--red); color: var(--red); }
+.edit-btn:hover { border-color: var(--green); color: var(--green); }
 .expense-total { display: flex; justify-content: space-between; padding: 16px; font-size: 15px; border-top: 2px solid var(--border); margin-top: 8px; }
 .expense-total + .expense-total { border-top: 1px solid var(--border-light); margin-top: 0; }
 .empty-text { color: var(--text-faint); font-size: 14px; padding: 40px; text-align: center; }
@@ -255,7 +261,7 @@ const DEFAULT_DATA = {
   }
 };
 
-let data = null, db = null, currentView = "dashboard", connected = false;
+let data = null, db = null, currentView = "dashboard", connected = false, editingId = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const app = $("#app");
@@ -538,32 +544,41 @@ function renderDashboard() {
 }
 
 function renderAddExpense() {
+  const editing = editingId && data.expenses[editingId];
+  const existing = editing ? data.expenses[editingId] : null;
+  const isEdit = !!existing;
+  const initWho = isEdit ? (existing.paidBy || "John") : "John";
+  const initDesc = isEdit ? existing.description : "";
+  const initAmt = isEdit ? existing.fullAmount : "";
+  const initDate = isEdit ? existing.date : new Date().toISOString().slice(0,10);
+
   app.innerHTML = renderNav() + `<div class="form-section fade-in">
-    <h2 class="section-title">Add a Shared Expense</h2>
+    <h2 class="section-title">${isEdit ? 'Edit Expense' : 'Add a Shared Expense'}</h2>
     <p class="form-hint">Enter the full amount paid — we'll split it in half automatically. For returns, enter a negative amount.</p>
     <label class="field-label">Who paid?</label>
     <div class="person-toggle">
-      <button id="pick-john" class="selected"><span class="avatar avatar-j">J</span> John</button>
-      <button id="pick-ira"><span class="avatar avatar-i">I</span> Ira</button>
+      <button id="pick-john" class="${initWho==='John'?'selected':''}"><span class="avatar avatar-j">J</span> John</button>
+      <button id="pick-ira" class="${initWho==='Ira'?'selected':''}"><span class="avatar avatar-i">I</span> Ira</button>
     </div>
     <div class="form-group"><label class="field-label">What was it for?</label>
-      <input type="text" id="exp-desc" placeholder="e.g. Philippines flights, Mattress, Dinner..."></div>
+      <input type="text" id="exp-desc" placeholder="e.g. Philippines flights, Mattress, Dinner..." value="${initDesc}"></div>
     <div class="form-row">
       <div class="form-group"><label class="field-label">Full Amount</label>
         <div class="input-wrap"><span class="input-prefix">$</span>
-        <input type="number" id="exp-amount" step="0.01" placeholder="0.00" class="input-dollar"></div></div>
+        <input type="number" id="exp-amount" step="0.01" placeholder="0.00" class="input-dollar" value="${initAmt}"></div></div>
       <div class="form-group"><label class="field-label">Date</label>
-        <input type="date" id="exp-date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <input type="date" id="exp-date" value="${initDate}"></div>
     </div>
     <div id="split-preview"></div>
-    <div class="btn-row"><button class="btn-secondary" data-view="dashboard">Cancel</button>
-      <button class="btn-primary" id="btn-add" disabled>Add Expense</button></div>
+    <div class="btn-row"><button class="btn-secondary" id="btn-cancel">Cancel</button>
+      <button class="btn-primary" id="btn-add" disabled>${isEdit ? 'Save Changes' : 'Add Expense'}</button></div>
   </div>`;
   bindNav();
 
-  let who = "John";
+  let who = initWho;
   const desc = $("#exp-desc"), amt = $("#exp-amount"), btn = $("#btn-add"), prev = $("#split-preview");
 
+  $("#btn-cancel").onclick = () => { editingId = null; currentView = isEdit ? "expenses" : "dashboard"; render(); };
   $("#pick-john").onclick = () => { who="John"; $("#pick-john").classList.add("selected"); $("#pick-ira").classList.remove("selected"); upd(); };
   $("#pick-ira").onclick = () => { who="Ira"; $("#pick-ira").classList.add("selected"); $("#pick-john").classList.remove("selected"); upd(); };
 
@@ -580,16 +595,20 @@ function renderAddExpense() {
     } else prev.innerHTML = '';
   }
   desc.oninput = upd; amt.oninput = upd;
+  upd(); // run once to enable button if editing
 
   btn.onclick = () => {
     const d = desc.value.trim(), f = parseFloat(amt.value), dt = $("#exp-date").value;
     if (!d || isNaN(f) || f === 0) return;
     const half = Math.round(f/2*100)/100;
     data.expenses = data.expenses || {};
-    data.expenses[Date.now().toString()] = { description: d, halfAmount: half, fullAmount: f, paidBy: who, date: dt || new Date().toISOString().slice(0,10) };
+    const id = isEdit ? editingId : Date.now().toString();
+    data.expenses[id] = { description: d, halfAmount: half, fullAmount: f, paidBy: who, date: dt || new Date().toISOString().slice(0,10) };
     saveData();
-    showToast(`Added ${d} — ${fmt(Math.abs(half))} (${who})`);
-    currentView = "dashboard"; render();
+    showToast(isEdit ? `Updated ${d}` : `Added ${d} — ${fmt(Math.abs(half))} (${who})`);
+    editingId = null;
+    currentView = isEdit ? "expenses" : "dashboard";
+    render();
   };
 }
 
@@ -604,6 +623,7 @@ function renderExpenses() {
         <span class="expense-meta"><span class="person-badge"><span class="avatar-sm ${j?'avatar-j':'avatar-i'}">${j?'J':'I'}</span>${p}</span>
           &nbsp;·&nbsp; ${e.date||'—'} &nbsp;·&nbsp; Full: ${fmt(e.fullAmount||e.halfAmount*2)}</span></div>
         <div class="expense-right"><span class="expense-amount ${e.halfAmount<0?'debit':'credit'}">${e.halfAmount<0?'-':''}${fmt(Math.abs(e.halfAmount))}</span>
+          <button class="edit-btn" data-edit="${e.id}" title="Edit">✎</button>
           <button class="remove-btn" data-remove="${e.id}" title="Delete">×</button></div></div>`; }).join("")}
       <div class="expense-total"><span>John's total credits</span><span style="font-weight:600;color:var(--green)">${fmt(johnCredits)}</span></div>
       <div class="expense-total"><span>Ira's total credits</span><span style="font-weight:600;color:var(--green)">${fmt(iraCredits)}</span></div>
@@ -637,6 +657,13 @@ function renderExpenses() {
     delete data.expenses[id];
     saveData();
     showToast("Expense moved to Recently Deleted");
+  });
+
+  // Edit — navigate to add form with pre-filled data
+  $$("[data-edit]").forEach(b => b.onclick = () => {
+    editingId = b.dataset.edit;
+    currentView = "add";
+    render();
   });
 
   // Restore from deleted

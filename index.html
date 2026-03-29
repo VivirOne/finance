@@ -35,6 +35,16 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
 .header h1 { font-family: var(--font-title); font-size: 28px; font-weight: 400; letter-spacing: -0.01em; color: var(--text-dark); }
 .header-sub { font-size: 13px; color: var(--text-light); margin-top: 2px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
+.year-picker { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.year-picker button {
+  width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--border);
+  background: transparent; cursor: pointer; font-size: 12px; color: var(--text-light);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-body); transition: all 0.15s;
+}
+.year-picker button:hover { border-color: var(--text-mid); color: var(--text-mid); }
+.year-picker button:disabled { opacity: 0.3; cursor: default; }
+.year-picker span { font-size: 14px; font-weight: 600; color: var(--text-dark); min-width: 40px; text-align: center; }
 .header-right { display: flex; align-items: center; gap: 12px; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 2s ease infinite; }
 .status-dot.offline { background: var(--red); animation: none; }
@@ -253,22 +263,22 @@ const firebaseConfig = {
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const YEAR = 2026;
+const CURRENT_YEAR = new Date().getFullYear();
 
 // Bills = FULL amounts (what Ira actually pays). John's half is calculated automatically.
-const DEFAULT_DATA = {
-  bills: {
-    mortgage: 1169.76,
-    condoFees: 931.08,
-    parking: 200,
-    propertyTax: [0, 0, 571.12, 571.00, 571.00, 285.52, 285.52, 285.52, 0, 0, 0, 0]
-  },
-  expenses: {
-    "phil-1": { description: "Philippines Trip", halfAmount: 3699.45, fullAmount: 7398.90, date: "2026-01-07", paidBy: "John" }
-  }
+const DEFAULT_BILLS = {
+  mortgage: 1169.76,
+  condoFees: 931.08,
+  parking: 200,
+  propertyTax: [0, 0, 571.12, 571.00, 571.00, 285.52, 285.52, 285.52, 0, 0, 0, 0]
+};
+const DEFAULT_EXPENSES = {
+  "phil-1": { description: "Philippines Trip", halfAmount: 3699.45, fullAmount: 7398.90, date: "2026-01-07", paidBy: "John" }
 };
 
 let data = null, db = null, currentView = "dashboard", connected = false, editingId = null;
+let viewYear = CURRENT_YEAR;
+let yearListener = null; // Firebase listener reference
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 const app = $("#app");
@@ -342,21 +352,106 @@ async function authenticateAndLoad(pin) {
       if (d) d.className = connected ? "status-dot" : "status-dot offline";
     });
 
-    db.ref("tracker").on("value", snap => {
-      const val = snap.val();
-      if (val) { data = { bills: { ...DEFAULT_DATA.bills, ...(val.bills || {}) }, expenses: val.expenses || {}, deletedExpenses: val.deletedExpenses || {} }; }
-      else { data = JSON.parse(JSON.stringify(DEFAULT_DATA)); data.deletedExpenses = {}; db.ref("tracker").set(data); }
-      const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-      let purged = false;
-      Object.entries(data.deletedExpenses || {}).forEach(([id, e]) => { if (e.deletedAt && e.deletedAt < cutoff) { delete data.deletedExpenses[id]; purged = true; } });
-      if (purged) saveData();
-      render();
-    });
+    // Check if we need to migrate from old flat structure
+    const oldSnap = await db.ref("tracker/bills").once("value");
+    if (oldSnap.val()) {
+      // Old format exists — migrate to 2026
+      const oldTracker = (await db.ref("tracker").once("value")).val();
+      const yearData = {
+        bills: oldTracker.bills || DEFAULT_BILLS,
+        expenses: oldTracker.expenses || {},
+        deletedExpenses: oldTracker.deletedExpenses || {},
+        carryForward: 0
+      };
+      await db.ref("tracker").remove();
+      await db.ref("tracker/2026").set(yearData);
+    }
+
+    // Check if current year exists, if not create it from previous year
+    const curSnap = await db.ref("tracker/" + CURRENT_YEAR).once("value");
+    if (!curSnap.val()) {
+      // Look for the most recent previous year
+      const allYears = await db.ref("tracker").once("value");
+      const yearKeys = Object.keys(allYears.val() || {}).filter(k => /^\d{4}$/.test(k)).map(Number).sort();
+
+      if (yearKeys.length > 0) {
+        const prevYear = yearKeys[yearKeys.length - 1];
+        const prevData = allYears.val()[prevYear];
+
+        // Calculate ending balance from previous year
+        const prevBills = prevData.bills || DEFAULT_BILLS;
+        const prevExpenses = prevData.expenses || {};
+        let johnCr = 0, iraCr = 0;
+        Object.values(prevExpenses).forEach(e => {
+          const half = Math.abs(e.halfAmount);
+          const person = e.paidBy || "John";
+          if (e.halfAmount < 0) { if (person === "John") johnCr -= half; else iraCr -= half; }
+          else { if (person === "John") johnCr += half; else iraCr += half; }
+        });
+        let endBal = -(johnCr - iraCr) + (prevData.carryForward || 0);
+        for (let i = 0; i < 12; i++) {
+          endBal += (prevBills.mortgage + prevBills.condoFees + prevBills.parking + (prevBills.propertyTax[i] || 0)) / 2;
+        }
+
+        // Create new year with carry forward and copied bills
+        await db.ref("tracker/" + CURRENT_YEAR).set({
+          bills: JSON.parse(JSON.stringify(prevBills)),
+          expenses: {},
+          deletedExpenses: {},
+          carryForward: Math.round(endBal * 100) / 100
+        });
+      } else {
+        // No previous year — seed with defaults
+        await db.ref("tracker/" + CURRENT_YEAR).set({
+          bills: JSON.parse(JSON.stringify(DEFAULT_BILLS)),
+          expenses: DEFAULT_EXPENSES,
+          deletedExpenses: {},
+          carryForward: 0
+        });
+      }
+    }
+
+    // Load the viewed year
+    loadYear(viewYear);
   } catch(e) {
     console.error("Auth failed:", e);
     sessionStorage.removeItem('finance_pin');
     showPinScreen("enter", null);
   }
+}
+
+function loadYear(year) {
+  // Detach old listener
+  if (yearListener) {
+    db.ref("tracker/" + yearListener).off("value");
+  }
+  yearListener = year;
+  viewYear = year;
+
+  db.ref("tracker/" + year).on("value", snap => {
+    const val = snap.val();
+    if (val) {
+      data = {
+        bills: { ...DEFAULT_BILLS, ...(val.bills || {}) },
+        expenses: val.expenses || {},
+        deletedExpenses: val.deletedExpenses || {},
+        carryForward: val.carryForward || 0
+      };
+    } else {
+      data = { bills: JSON.parse(JSON.stringify(DEFAULT_BILLS)), expenses: {}, deletedExpenses: {}, carryForward: 0 };
+    }
+    // Auto-purge deleted items older than 30 days
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    let purged = false;
+    Object.entries(data.deletedExpenses || {}).forEach(([id, e]) => { if (e.deletedAt && e.deletedAt < cutoff) { delete data.deletedExpenses[id]; purged = true; } });
+    if (purged) saveData();
+    render();
+  });
+}
+
+function switchYear(year) {
+  viewYear = year;
+  loadYear(year);
 }
 
 function showPinScreen(mode, storedHash) {
@@ -446,7 +541,7 @@ function showPinScreen(mode, storedHash) {
   renderPinUI();
 }
 
-function saveData() { if (db && data) db.ref("tracker").set(data); }
+function saveData() { if (db && data) db.ref("tracker/" + viewYear).set(data); }
 
 // ── CALCULATIONS ──
 // Balance from John's perspective: positive = John owes Ira, negative = John has credit
@@ -472,7 +567,7 @@ function getNetCredits() {
 
 function computeBalances() {
   const { net } = getNetCredits();
-  let running = -net; // negative = John has credit
+  let running = (data.carryForward || 0) - net; // carry forward + net credits
   return MONTHS.map((name, i) => {
     const full = getFullBill(i), half = full / 2;
     running += half;
@@ -484,15 +579,20 @@ function computeBalances() {
 function render() { if (!data) return; ({ dashboard: renderDashboard, add: renderAddExpense, expenses: renderExpenses, settings: renderSettings }[currentView] || renderDashboard)(); }
 
 function renderNav() {
-  return `<div class="header"><div><h1>John & Ira</h1><p class="header-sub">${YEAR} Finance Tracker</p></div>
-    <div class="header-right"><span class="${connected ? 'status-dot' : 'status-dot offline'}" title="${connected ? 'Connected to database' : 'Offline — changes will sync when reconnected'}"></span>
+  return `<div class="header"><div><h1>John & Ira</h1>
+    <div class="year-picker">
+      <button data-yr="${viewYear - 1}" title="Previous year">‹</button>
+      <span>${viewYear}</span>
+      <button data-yr="${viewYear + 1}" title="Next year" ${viewYear >= CURRENT_YEAR ? 'disabled' : ''}>›</button>
+    </div></div>
+    <div class="header-right"><span class="${connected ? 'status-dot' : 'status-dot offline'}" title="${connected ? 'Connected to database' : 'Offline'}"></span>
     <div class="nav">${[["dashboard","Overview"],["add","Add Expense"],["expenses","Expenses"],["settings","Bills"]].map(([k,l]) =>
       `<button class="${currentView===k?'active':''}" data-view="${k}">${l}</button>`).join("")}</div></div></div>`;
 }
 
 function renderDashboard() {
   const bal = computeBalances(), now = new Date();
-  const cm = now.getFullYear() === YEAR ? now.getMonth() : 0;
+  const cm = now.getFullYear() === viewYear ? now.getMonth() : 11; // show Dec for past years
   const cur = bal[cm]?.running ?? 0;
   const { johnCredits, iraCredits } = getNetCredits();
   const covered = bal.reduce((last, b, i) => b.running <= 0 ? i : last, -1);
@@ -510,7 +610,7 @@ function renderDashboard() {
 
   app.innerHTML = renderNav() + `<div class="fade-in">
     <div class="status-card ${johnOwes ? 'owing' : 'credit'}">
-      <div class="status-top"><span class="status-label">${label}</span><span class="status-month">${MONTHS[cm]} ${YEAR}</span></div>
+      <div class="status-top"><span class="status-label">${label}</span><span class="status-month">${MONTHS[cm]} ${viewYear}</span></div>
       <div class="status-amount">${amount}</div>
       <div class="status-footer">${footer}</div>
     </div>
@@ -738,7 +838,13 @@ function renderSettings() {
   }
 }
 
-function bindNav() { $$("[data-view]").forEach(b => b.onclick = () => { currentView = b.dataset.view; render(); }); }
+function bindNav() {
+  $$("[data-view]").forEach(b => b.onclick = () => { currentView = b.dataset.view; render(); });
+  $$("[data-yr]").forEach(b => b.onclick = () => {
+    const yr = parseInt(b.dataset.yr);
+    if (yr <= CURRENT_YEAR) switchYear(yr);
+  });
+}
 
 initFirebase();
 

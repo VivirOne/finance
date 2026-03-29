@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2d5a3d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="J&I Finance">
 <title>John & Ira — Finance Tracker</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='%232d5a3d'/><text x='16' y='22' text-anchor='middle' font-family='serif' font-size='18' font-weight='bold' fill='white'>&amp;</text></svg>">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -63,6 +70,17 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .chart-value { font-size: 9px; font-weight: 500; }
 .chart-value.credit { color: var(--green); }
 .chart-value.owing { color: var(--red); }
+.chart-col.crossover { position: relative; }
+.chart-col.crossover::before {
+  content: ''; position: absolute; left: -1px; top: 10%; bottom: 30%;
+  width: 2px; background: var(--red); opacity: 0.6;
+  border-radius: 1px;
+}
+.crossover-label {
+  position: absolute; left: -4px; top: 2%; font-size: 8px; font-weight: 600;
+  color: var(--red); writing-mode: vertical-rl; text-orientation: mixed;
+  letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7;
+}
 .section { margin-bottom: 36px; }
 .section-title { font-family: var(--font-title); font-size: 20px; font-weight: 400; margin-bottom: 16px; color: var(--text-dark); }
 .table-wrap { overflow-x: auto; }
@@ -431,7 +449,7 @@ function saveData() { if (db && data) db.ref("tracker").set(data); }
 function getFullBill(i) { const b = data.bills; return b.mortgage + b.condoFees + b.parking + (b.propertyTax[i] || 0); }
 function getHalfBill(i) { return getFullBill(i) / 2; }
 
-function getExpensesList() { if (!data.expenses) return []; return Object.entries(data.expenses).map(([id, e]) => ({ id, ...e })); }
+function getExpensesList() { if (!data.expenses) return []; return Object.entries(data.expenses).map(([id, e]) => ({ id, ...e })).sort((a, b) => (b.date || '').localeCompare(a.date || '')); }
 
 function getNetCredits() {
   let johnCredits = 0, iraCredits = 0;
@@ -494,13 +512,20 @@ function renderDashboard() {
       <div class="stat-card"><span class="stat-label">John's Bills YTD</span><span class="stat-value">${fmt(billsYTD)}</span><span class="stat-sub">John's half through ${SHORT[cm]}</span></div>
     </div>
     <div class="section"><h2 class="section-title">Running Balance</h2>
-      <div class="chart-wrap">${bal.map((b,i) => {
-        const pct = (Math.abs(b.running)/maxAbs)*100, cr = b.running<=0, cu = i===cm, fu = i>cm;
-        return `<div class="chart-col ${fu?'future':''}"><div class="chart-bar-wrap">${cr ?
-          `<div style="flex:1"></div><div class="chart-bar credit ${cu?'current':''}" style="height:${Math.max(pct*0.5,3)}%"></div>` :
-          `<div class="chart-bar owing ${cu?'current':''}" style="height:${Math.max(pct*0.5,3)}%"></div><div style="flex:1"></div>`
-        }</div><div class="chart-zero"></div><span class="chart-label ${cu?'current':''}">${SHORT[i]}</span><span class="chart-value ${cr?'credit':'owing'}">${fmt(b.running)}</span></div>`;
-      }).join("")}</div>
+      <div class="chart-wrap">${(() => {
+        // Find crossover: first month where balance goes positive after being negative
+        const crossIdx = bal.findIndex((b,i) => b.running > 0 && (i === 0 || bal[i-1].running <= 0));
+        return bal.map((b,i) => {
+          const pct = (Math.abs(b.running)/maxAbs)*100, cr = b.running<=0, cu = i===cm, fu = i>cm;
+          const isCross = i === crossIdx && crossIdx > 0;
+          return `<div class="chart-col ${fu?'future':''} ${isCross?'crossover':''}">
+            ${isCross ? '<span class="crossover-label">PAY</span>' : ''}
+            <div class="chart-bar-wrap">${cr ?
+            `<div style="flex:1"></div><div class="chart-bar credit ${cu?'current':''}" style="height:${Math.max(pct*0.5,3)}%"></div>` :
+            `<div class="chart-bar owing ${cu?'current':''}" style="height:${Math.max(pct*0.5,3)}%"></div><div style="flex:1"></div>`
+          }</div><div class="chart-zero"></div><span class="chart-label ${cu?'current':''}">${SHORT[i]}</span><span class="chart-value ${cr?'credit':'owing'}">${fmt(b.running)}</span></div>`;
+        }).join("");
+      })()}</div>
     </div>
     <div class="section"><h2 class="section-title">Monthly Breakdown</h2>
       <div class="table-wrap"><table><thead><tr><th>Month</th><th>Full Bill</th><th>John's Half</th><th>Balance</th></tr></thead><tbody>
@@ -687,6 +712,11 @@ function renderSettings() {
 function bindNav() { $$("[data-view]").forEach(b => b.onclick = () => { currentView = b.dataset.view; render(); }); }
 
 initFirebase();
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 </script>
 </body>
 </html>

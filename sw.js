@@ -1,7 +1,5 @@
-const CACHE = 'ji-finance-v1';
+const CACHE = 'ji-finance-v2';
 const ASSETS = [
-  '/finance/',
-  '/finance/index.html',
   '/finance/icon-192.png',
   '/finance/icon-512.png'
 ];
@@ -17,14 +15,24 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network first for API/Firebase, cache first for app shell
-  if (e.request.url.includes('firebaseio.com') || e.request.url.includes('googleapis.com') || e.request.url.includes('gstatic.com')) {
+  const url = new URL(e.request.url);
+
+  // HTML pages: always network first so updates deploy immediately
+  if (e.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('/')) {
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-  } else {
-    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
-      const clone = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, clone));
-      return res;
-    })));
+    return;
   }
+
+  // Firebase/Google APIs: network only
+  if (url.hostname.includes('firebaseio.com') || url.hostname.includes('googleapis.com') || url.hostname.includes('gstatic.com')) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // Everything else (icons, fonts): cache first
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+    const clone = res.clone();
+    caches.open(CACHE).then(c => c.put(e.request, clone));
+    return res;
+  })));
 });

@@ -105,7 +105,6 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 .btn-primary:disabled { opacity: 0.4; cursor: default; }
 .btn-primary:hover:not(:disabled) { opacity: 0.9; }
 .btn-secondary { padding: 11px 28px; font-size: 14px; font-weight: 500; border: 1.5px solid #e0dbd6; border-radius: 8px; background: transparent; color: var(--text-light); cursor: pointer; font-family: var(--font-body); }
-.btn-danger { padding: 9px 20px; font-size: 13px; font-weight: 500; border: 1.5px solid #d4a0a0; border-radius: 8px; background: transparent; color: var(--red); cursor: pointer; font-family: var(--font-body); }
 .expense-list { display: flex; flex-direction: column; gap: 2px; }
 .expense-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--card); border-radius: 10px; gap: 16px; }
 .expense-info { display: flex; flex-direction: column; gap: 2px; }
@@ -135,6 +134,16 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 .prop-tax-item input[type="number"] { font-size: 13px; padding: 6px 8px 6px 26px; }
 .prop-tax-item .input-prefix { font-size: 13px; left: 8px; }
 .settings-divider { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
+.bills-locked { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+.bill-display { background: var(--card); border-radius: 10px; padding: 16px 18px; }
+.bill-display .bill-label { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; margin-bottom: 4px; }
+.bill-display .bill-value { font-family: var(--font-display); font-size: 20px; color: var(--text-dark); }
+.ptax-locked { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+.ptax-display { background: var(--card); border-radius: 8px; padding: 8px 12px; }
+.ptax-display .ptax-month { font-size: 11px; color: var(--text-light); font-weight: 500; }
+.ptax-display .ptax-val { font-size: 14px; color: var(--text-dark); font-variant-numeric: tabular-nums; }
+.btn-edit { padding: 8px 20px; font-size: 13px; font-weight: 500; border: 1.5px solid var(--border); border-radius: 8px; background: transparent; color: var(--text-mid); cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
+.btn-edit:hover { border-color: var(--text-mid); }
 .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--text-dark); color: #fff; padding: 10px 24px; border-radius: 10px; font-size: 13px; font-weight: 500; z-index: 100; animation: slideToast 0.25s ease; font-family: var(--font-body); box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 16px; }
 .toast-undo { background: none; border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: background 0.15s; }
 .toast-undo:hover { background: rgba(255,255,255,0.15); }
@@ -154,6 +163,8 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
   .stat-value { font-size: 18px; }
   .expense-item { flex-direction: column; align-items: flex-start; gap: 8px; }
   .expense-right { align-self: flex-end; }
+  .bills-locked { grid-template-columns: 1fr; }
+  .ptax-locked { grid-template-columns: repeat(3, 1fr); }
 }
 </style>
 </head>
@@ -448,32 +459,57 @@ function renderExpenses() {
   });
 }
 
+let billsEditing = false;
+
 function renderSettings() {
   const b = data.bills;
-  app.innerHTML = renderNav() + `<div class="form-section fade-in">
-    <h2 class="section-title">Monthly Bills</h2>
-    <p class="form-hint">Enter the full bill amounts that Ira pays each month. John's half is calculated automatically on the overview.</p>
-    <div class="form-row">
-      ${[["mortgage","Mortgage",b.mortgage],["condoFees","Condo Fees",b.condoFees],["parking","Parking",b.parking]].map(([k,l,v]) =>
-        `<div class="form-group"><label class="field-label">${l}</label><div class="input-wrap"><span class="input-prefix">$</span>
-        <input type="number" step="0.01" id="bill-${k}" value="${v}" class="input-dollar"></div></div>`).join("")}
-    </div>
-    <div style="margin-top:24px"><label class="field-label">Property Tax by Month (Full Amount)</label>
-      <div class="prop-tax-grid">${MONTHS.map((m,i) => `<div class="prop-tax-item"><span class="prop-tax-label">${SHORT[i]}</span>
-        <div class="input-wrap"><span class="input-prefix">$</span>
-        <input type="number" step="0.01" id="ptax-${i}" value="${b.propertyTax[i]||0}" class="input-dollar"></div></div>`).join("")}</div>
-    </div>
-    <div class="btn-row"><button class="btn-secondary" data-view="dashboard">Cancel</button>
-      <button class="btn-primary" id="btn-save-bills">Save Bills</button></div>
-    <div class="settings-divider"><button class="btn-danger" id="btn-reset">Reset All Data to Defaults</button></div>
-  </div>`;
-  bindNav();
-  $("#btn-save-bills").onclick = () => {
-    data.bills = { mortgage: parseFloat($("#bill-mortgage").value)||0, condoFees: parseFloat($("#bill-condoFees").value)||0, parking: parseFloat($("#bill-parking").value)||0,
-      propertyTax: MONTHS.map((_,i) => parseFloat($(`#ptax-${i}`).value)||0) };
-    saveData(); showToast("Bills updated"); currentView = "dashboard"; render();
-  };
-  $("#btn-reset").onclick = () => { if (!confirm("Reset all data? Can't be undone.")) return; data = JSON.parse(JSON.stringify(DEFAULT_DATA)); saveData(); showToast("Reset"); render(); };
+
+  if (!billsEditing) {
+    // LOCKED VIEW — read only
+    app.innerHTML = renderNav() + `<div class="form-section fade-in">
+      <h2 class="section-title">Monthly Bills</h2>
+      <p class="form-hint">These are the full bill amounts Ira pays each month. John's half is calculated automatically on the overview.</p>
+      <div class="bills-locked">
+        ${[["Mortgage",b.mortgage],["Condo Fees",b.condoFees],["Parking",b.parking]].map(([l,v]) =>
+          `<div class="bill-display"><div class="bill-label">${l}</div><div class="bill-value">${fmt(v)}</div></div>`).join("")}
+      </div>
+      <div style="margin-top:24px"><label class="field-label">Property Tax by Month</label>
+        <div class="ptax-locked">${MONTHS.map((m,i) => `<div class="ptax-display">
+          <div class="ptax-month">${SHORT[i]}</div>
+          <div class="ptax-val">${b.propertyTax[i] ? fmt(b.propertyTax[i]) : '—'}</div>
+        </div>`).join("")}</div>
+      </div>
+      <div class="btn-row"><button class="btn-edit" id="btn-unlock">Edit Bills</button></div>
+    </div>`;
+    bindNav();
+    $("#btn-unlock").onclick = () => { billsEditing = true; render(); };
+
+  } else {
+    // UNLOCKED VIEW — editable
+    app.innerHTML = renderNav() + `<div class="form-section fade-in">
+      <h2 class="section-title">Edit Monthly Bills</h2>
+      <p class="form-hint">Update the full bill amounts. Changes take effect immediately on the overview.</p>
+      <div class="form-row">
+        ${[["mortgage","Mortgage",b.mortgage],["condoFees","Condo Fees",b.condoFees],["parking","Parking",b.parking]].map(([k,l,v]) =>
+          `<div class="form-group"><label class="field-label">${l}</label><div class="input-wrap"><span class="input-prefix">$</span>
+          <input type="number" step="0.01" id="bill-${k}" value="${v}" class="input-dollar"></div></div>`).join("")}
+      </div>
+      <div style="margin-top:24px"><label class="field-label">Property Tax by Month (Full Amount)</label>
+        <div class="prop-tax-grid">${MONTHS.map((m,i) => `<div class="prop-tax-item"><span class="prop-tax-label">${SHORT[i]}</span>
+          <div class="input-wrap"><span class="input-prefix">$</span>
+          <input type="number" step="0.01" id="ptax-${i}" value="${b.propertyTax[i]||0}" class="input-dollar"></div></div>`).join("")}</div>
+      </div>
+      <div class="btn-row"><button class="btn-secondary" id="btn-cancel-edit">Cancel</button>
+        <button class="btn-primary" id="btn-save-bills">Save Bills</button></div>
+    </div>`;
+    bindNav();
+    $("#btn-cancel-edit").onclick = () => { billsEditing = false; render(); };
+    $("#btn-save-bills").onclick = () => {
+      data.bills = { mortgage: parseFloat($("#bill-mortgage").value)||0, condoFees: parseFloat($("#bill-condoFees").value)||0, parking: parseFloat($("#bill-parking").value)||0,
+        propertyTax: MONTHS.map((_,i) => parseFloat($(`#ptax-${i}`).value)||0) };
+      saveData(); showToast("Bills updated"); billsEditing = false; currentView = "dashboard"; render();
+    };
+  }
 }
 
 function bindNav() { $$("[data-view]").forEach(b => b.onclick = () => { currentView = b.dataset.view; render(); }); }

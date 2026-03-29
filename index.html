@@ -177,7 +177,7 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 }
 .pin-wrap h1 { font-family: var(--font-title); font-size: 28px; font-weight: 400; color: var(--text-dark); }
 .pin-wrap p { color: var(--text-light); font-size: 14px; max-width: 320px; line-height: 1.5; }
-.pin-dots { display: flex; gap: 12px; margin: 8px 0; }
+.pin-dots { display: flex; gap: 12px; margin: 8px 0; position: relative; cursor: text; }
 .pin-dot {
   width: 14px; height: 14px; border-radius: 50%;
   border: 2px solid var(--border); background: transparent;
@@ -185,7 +185,14 @@ input:focus, select:focus { outline: none; border-color: var(--green); }
 }
 .pin-dot.filled { background: var(--green); border-color: var(--green); }
 .pin-dot.error { background: var(--red); border-color: var(--red); animation: shake 0.4s ease; }
+.pin-hidden-input {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0; font-size: 16px; /* prevents iOS zoom */
+  border: none; background: transparent; color: transparent;
+  caret-color: transparent;
+}
 .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 240px; }
+.pin-hint { font-size: 12px; color: var(--text-faint); margin-top: -4px; }
 .pin-key {
   padding: 14px; font-size: 20px; font-weight: 500; border: 1.5px solid var(--border);
   border-radius: 10px; background: var(--white); cursor: pointer;
@@ -365,9 +372,11 @@ function showPinScreen(mode, storedHash) {
       <div class="pin-wrap fade-in">
         <h1>${title}</h1>
         <p>${subtitle}</p>
-        <div class="pin-dots">
+        <div class="pin-dots" id="pin-dots-area">
+          <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="4" class="pin-hidden-input" id="pin-input" autocomplete="off">
           ${[0,1,2,3].map(i => `<div class="pin-dot ${i < pin.length ? 'filled' : ''} ${errorMsg ? 'error' : ''}"></div>`).join("")}
         </div>
+        <p class="pin-hint">Tap to use keyboard</p>
         <div class="pin-error-msg">${errorMsg}</div>
         <div class="pin-keypad">
           ${[1,2,3,4,5,6,7,8,9].map(n => `<button class="pin-key" data-key="${n}">${n}</button>`).join("")}
@@ -377,8 +386,33 @@ function showPinScreen(mode, storedHash) {
         </div>
       </div>`;
 
+    // Wire up on-screen keypad
     $$(".pin-key:not(.empty)").forEach(k => {
       k.onclick = () => handleKey(k.dataset.key);
+    });
+
+    // Wire up hidden input for mobile keyboard
+    const inp = $("#pin-input");
+    inp.value = pin;
+
+    // Focus input when tapping dots area
+    $("#pin-dots-area").onclick = () => inp.focus();
+
+    // Auto-focus on mobile after a short delay (helps with iOS)
+    setTimeout(() => inp.focus(), 100);
+
+    inp.addEventListener("input", () => {
+      const val = inp.value.replace(/\D/g, '').slice(0, 4);
+      // Figure out what changed
+      if (val.length > pin.length) {
+        // New digit added
+        const newDigit = val[val.length - 1];
+        handleKey(newDigit);
+      } else if (val.length < pin.length) {
+        // Digit removed
+        handleKey("back");
+      }
+      inp.value = pin; // sync back
     });
   }
 

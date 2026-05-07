@@ -871,6 +871,7 @@ function renderPayIra() {
 }
 
 
+function renderExpenses() {
   const exps = getExpensesList(), { johnCredits, iraCredits, johnPayments } = getNetCredits();
   const deleted = Object.entries(data.deletedExpenses || {}).map(([id, e]) => ({ id, ...e }));
 

@@ -60,6 +60,21 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .status-month { font-size: 13px; opacity: 0.7; font-weight: 300; }
 .status-amount { font-family: var(--font-display); font-size: 38px; font-weight: 300; margin-bottom: 8px; letter-spacing: -0.02em; }
 .status-footer { font-size: 14px; opacity: 0.85; font-weight: 300; line-height: 1.5; }
+.pay-button {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 16px; padding: 10px 20px; font-size: 14px; font-weight: 600;
+  background: rgba(255,255,255,0.2); color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.4); border-radius: 8px;
+  cursor: pointer; font-family: var(--font-body); transition: all 0.15s;
+}
+.pay-button:hover { background: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.6); }
+.payment-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 600; padding: 2px 8px;
+  border-radius: 10px; background: var(--green-light); color: var(--green);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.expense-amount.payment { color: var(--green); font-style: italic; }
 .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
 .stat-card { background: var(--card); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
 .stat-label { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
@@ -555,14 +570,19 @@ function getHalfBill(i) { return getFullBill(i) / 2; }
 function getExpensesList() { if (!data.expenses) return []; return Object.entries(data.expenses).map(([id, e]) => ({ id, ...e })).sort((a, b) => (b.date || '').localeCompare(a.date || '')); }
 
 function getNetCredits() {
-  let johnCredits = 0, iraCredits = 0;
+  let johnCredits = 0, iraCredits = 0, johnPayments = 0;
   getExpensesList().forEach(e => {
+    if (e.isPayment) {
+      // Payment from John to Ira: full amount reduces what John owes
+      johnPayments += e.halfAmount; // halfAmount stores full payment for payments
+      return;
+    }
     const half = Math.abs(e.halfAmount);
     const person = e.paidBy || "John";
     if (e.halfAmount < 0) { if (person === "John") johnCredits -= half; else iraCredits -= half; }
     else { if (person === "John") johnCredits += half; else iraCredits += half; }
   });
-  return { johnCredits, iraCredits, net: johnCredits - iraCredits };
+  return { johnCredits, iraCredits, johnPayments, net: johnCredits - iraCredits + johnPayments };
 }
 
 function computeBalances() {
@@ -576,7 +596,7 @@ function computeBalances() {
 }
 
 // ── RENDER ──
-function render() { if (!data) return; ({ dashboard: renderDashboard, add: renderAddExpense, expenses: renderExpenses, settings: renderSettings }[currentView] || renderDashboard)(); }
+function render() { if (!data) return; ({ dashboard: renderDashboard, add: renderAddExpense, pay: renderPayIra, expenses: renderExpenses, settings: renderSettings }[currentView] || renderDashboard)(); }
 
 function renderNav() {
   return `<div class="header"><div><h1>John & Ira</h1>
@@ -613,6 +633,7 @@ function renderDashboard() {
       <div class="status-top"><span class="status-label">${label}</span><span class="status-month">${MONTHS[cm]} ${viewYear}</span></div>
       <div class="status-amount">${amount}</div>
       <div class="status-footer">${footer}</div>
+      ${johnOwes ? `<button class="pay-button" id="btn-pay-ira">Pay Ira ${fmt(cur)}</button>` : ''}
     </div>
     <div class="stats-row">
       <div class="stat-card"><span class="stat-label">John's Credits</span><span class="stat-value">${fmt(johnCredits)}</span><span class="stat-sub">From John's shared expenses</span></div>
@@ -648,11 +669,27 @@ function renderDashboard() {
     </div>
   </div>`;
   bindNav();
+
+  const payBtn = $("#btn-pay-ira");
+  if (payBtn) {
+    payBtn.onclick = () => {
+      currentView = "pay";
+      render();
+    };
+  }
 }
 
 function renderAddExpense() {
   const editing = editingId && data.expenses[editingId];
   const existing = editing ? data.expenses[editingId] : null;
+
+  // If editing a payment, redirect to pay form
+  if (existing && existing.isPayment) {
+    currentView = "pay";
+    render();
+    return;
+  }
+
   const isEdit = !!existing;
   const initWho = isEdit ? (existing.paidBy || "John") : "John";
   const initDesc = isEdit ? existing.description : "";
@@ -719,21 +756,150 @@ function renderAddExpense() {
   };
 }
 
-function renderExpenses() {
-  const exps = getExpensesList(), { johnCredits, iraCredits } = getNetCredits();
+function renderPayIra() {
+  const editing = editingId && data.expenses[editingId] && data.expenses[editingId].isPayment;
+  const existing = editing ? data.expenses[editingId] : null;
+  const isEdit = !!existing;
+
+  // Calculate current amount owed
+  const bal = computeBalances();
+  const now = new Date();
+  const cm = now.getFullYear() === viewYear ? now.getMonth() : 11;
+  const owed = bal[cm]?.running ?? 0;
+
+  // For editing, use the existing payment amount; for new, use what's owed
+  const defaultAmount = isEdit ? existing.halfAmount.toFixed(2) : (owed > 0 ? owed.toFixed(2) : "");
+  const initDate = isEdit ? existing.date : new Date().toISOString().slice(0,10);
+  const initNote = isEdit ? (existing.description.replace(/^Payment to Ira[\s—\-]*/, '').replace(/^\(.+\)$/, '')) : "";
+
+  app.innerHTML = renderNav() + `<div class="form-section fade-in">
+    <h2 class="section-title">${isEdit ? 'Edit Payment' : 'Pay Ira'}</h2>
+    <p class="form-hint">${isEdit ? 'Update the details of this payment.' : `Settle what you owe for ${MONTHS[cm]}. The amount is pre-filled based on your current balance — you can adjust if you're paying more or less.`}</p>
+
+    <div class="form-group">
+      <label class="field-label">Payment Amount</label>
+      <div class="input-wrap">
+        <span class="input-prefix">$</span>
+        <input type="number" id="pay-amount" step="0.01" placeholder="0.00" class="input-dollar" value="${defaultAmount}">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="field-label">Date Paid</label>
+      <input type="date" id="pay-date" value="${initDate}">
+    </div>
+
+    <div class="form-group">
+      <label class="field-label">Note (optional)</label>
+      <input type="text" id="pay-note" placeholder="e.g. May settlement, Etransfer" value="${initNote}">
+    </div>
+
+    <div id="pay-preview"></div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" id="btn-cancel-pay">Cancel</button>
+      <button class="btn-primary" id="btn-confirm-pay" disabled>${isEdit ? 'Save Changes' : 'Confirm Payment'}</button>
+    </div>
+  </div>`;
+  bindNav();
+
+  const amtEl = $("#pay-amount");
+  const noteEl = $("#pay-note");
+  const dateEl = $("#pay-date");
+  const btn = $("#btn-confirm-pay");
+  const prev = $("#pay-preview");
+
+  function upd() {
+    const v = parseFloat(amtEl.value);
+    btn.disabled = isNaN(v) || v <= 0;
+    if (!isNaN(v) && v > 0 && !isEdit) {
+      const newBal = owed - v;
+      let resultText, resultColor;
+      if (Math.abs(newBal) < 0.01) {
+        resultText = "Balance settled — you're all caught up!";
+        resultColor = "var(--green)";
+      } else if (newBal > 0) {
+        resultText = `You'll still owe ${fmt(newBal)} after this payment`;
+        resultColor = "var(--red)";
+      } else {
+        resultText = `You'll have ${fmt(Math.abs(newBal))} credit after this payment`;
+        resultColor = "var(--green)";
+      }
+      prev.innerHTML = `<div class="split-preview">
+        <div class="split-row"><span>Currently owe</span><span style="font-weight:600">${fmt(owed)}</span></div>
+        <div class="split-row"><span>Paying</span><span style="font-weight:600;color:var(--green)">${fmt(v)}</span></div>
+        <div class="split-divider"></div>
+        <div class="split-row"><span style="color:${resultColor};font-weight:500">${resultText}</span></div>
+      </div>`;
+    } else {
+      prev.innerHTML = '';
+    }
+  }
+
+  amtEl.oninput = upd;
+  upd();
+
+  $("#btn-cancel-pay").onclick = () => {
+    editingId = null;
+    currentView = isEdit ? "expenses" : "dashboard";
+    render();
+  };
+
+  btn.onclick = () => {
+    const v = parseFloat(amtEl.value);
+    const note = noteEl.value.trim();
+    const dt = dateEl.value || new Date().toISOString().slice(0,10);
+    if (isNaN(v) || v <= 0) return;
+
+    const desc = note ? `Payment to Ira — ${note}` : `Payment to Ira (${MONTHS[cm]})`;
+    data.expenses = data.expenses || {};
+    const id = isEdit ? editingId : Date.now().toString();
+    data.expenses[id] = {
+      description: desc,
+      halfAmount: v,
+      fullAmount: v,
+      paidBy: "John",
+      isPayment: true,
+      date: dt
+    };
+    saveData();
+    showToast(isEdit ? `Payment updated` : `Paid Ira ${fmt(v)}`);
+    editingId = null;
+    currentView = isEdit ? "expenses" : "dashboard";
+    render();
+  };
+}
+
+
+  const exps = getExpensesList(), { johnCredits, iraCredits, johnPayments } = getNetCredits();
   const deleted = Object.entries(data.deletedExpenses || {}).map(([id, e]) => ({ id, ...e }));
 
   app.innerHTML = renderNav() + `<div class="fade-in"><h2 class="section-title">All Expenses</h2>
     ${exps.length === 0 ? '<p class="empty-text">No expenses yet.</p>' : `<div class="expense-list">
-      ${exps.map(e => { const p = e.paidBy||'John', j = p==='John'; return `<div class="expense-item"><div class="expense-info">
+      ${exps.map(e => {
+        const p = e.paidBy||'John', j = p==='John';
+        if (e.isPayment) {
+          return `<div class="expense-item"><div class="expense-info">
+            <span class="expense-name">${e.description}</span>
+            <span class="expense-meta">
+              <span class="payment-badge">Payment</span>
+              &nbsp;·&nbsp; ${e.date||'—'}
+            </span></div>
+            <div class="expense-right"><span class="expense-amount payment">${fmt(e.halfAmount)}</span>
+              <button class="edit-btn" data-edit="${e.id}" title="Edit">✎</button>
+              <button class="remove-btn" data-remove="${e.id}" title="Delete">×</button></div></div>`;
+        }
+        return `<div class="expense-item"><div class="expense-info">
         <span class="expense-name">${e.description}</span>
         <span class="expense-meta"><span class="person-badge"><span class="avatar-sm ${j?'avatar-j':'avatar-i'}">${j?'J':'I'}</span>${p}</span>
           &nbsp;·&nbsp; ${e.date||'—'} &nbsp;·&nbsp; Full: ${fmt(e.fullAmount||e.halfAmount*2)}</span></div>
         <div class="expense-right"><span class="expense-amount ${e.halfAmount<0?'debit':'credit'}">${e.halfAmount<0?'-':''}${fmt(Math.abs(e.halfAmount))}</span>
           <button class="edit-btn" data-edit="${e.id}" title="Edit">✎</button>
-          <button class="remove-btn" data-remove="${e.id}" title="Delete">×</button></div></div>`; }).join("")}
-      <div class="expense-total"><span>John's total credits</span><span style="font-weight:600;color:var(--green)">${fmt(johnCredits)}</span></div>
-      <div class="expense-total"><span>Ira's total credits</span><span style="font-weight:600;color:var(--green)">${fmt(iraCredits)}</span></div>
+          <button class="remove-btn" data-remove="${e.id}" title="Delete">×</button></div></div>`;
+      }).join("")}
+      <div class="expense-total"><span>John's expense credits</span><span style="font-weight:600;color:var(--green)">${fmt(johnCredits)}</span></div>
+      <div class="expense-total"><span>Ira's expense credits</span><span style="font-weight:600;color:var(--green)">${fmt(iraCredits)}</span></div>
+      ${johnPayments > 0 ? `<div class="expense-total"><span>John's payments to Ira</span><span style="font-weight:600;color:var(--green)">${fmt(johnPayments)}</span></div>` : ''}
     </div>`}
     ${deleted.length > 0 ? `
       <div class="deleted-section">
